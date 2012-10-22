@@ -1,0 +1,202 @@
+body {
+  font: 10px sans-serif;
+}
+
+.patientSummary{
+	position: absolute;
+	top: 10px;
+	left: 20px;
+	width: 1300px;
+	height: 30px;
+}
+
+.mainPanel{
+	position:absolute;
+	top:50px;
+	left:25px;
+	right:25px;
+}
+
+.aggregatePanel{
+	position:absolute;
+	top:50px;
+	left:25px;
+	right:25px;
+}
+
+.selectionPanel{
+	position:absolute;
+	bottom:25px;
+	left:25px;
+	width:50px;
+	height:50px;
+	fill:steelblue;
+}
+
+.label{
+	fill:#bbb;
+	dy:.71em;
+}
+
+path {
+	stroke:steelblue;
+	stroke-width: 0.1;
+	stroke-opacity:0.2;
+	fill:none;
+}
+
+path.gender {
+	stroke:black;
+	fill-opacity:1;
+}
+
+path.race {
+	stroke:black;
+	fill-opacity:1;
+}
+
+.line{
+	stroke:firebrick;
+	stroke-width: 1;
+	stroke-opacity:0.5;
+	fill:none;
+}
+
+.patientLine{
+	stroke:mintcream;
+	stroke-width:1.7;
+	fill:none;
+	stroke-opacity:1;
+}
+
+.envelope {
+  fill: steelblue;
+  fill-opacity: 0.7;
+  stroke: steelblue;
+  stroke-width: 0.7px;
+}
+
+.envelope_selected {
+  fill: firebrick;
+  fill-opacity: 0.5;
+  stroke: firebrick;
+  stroke-width: 0.7px;
+}
+
+rect{
+	fill:none;
+	stroke-width:0.5;
+	stroke:black;
+}
+
+line.axis {
+	stroke:black;
+	stroke-width: 1;
+	fill:none;
+}
+
+.rule line {
+	stroke:#eee;
+	stroke-width: 5;
+	fill:none;
+}
+
+.rule line.axis {
+	stroke:#ccc;
+	stroke-width:2;
+	fill:none;
+}
+
+
+/*----*/
+
+.selectionBar{
+	position: absolute;
+	top: 65px;
+	left: 20px;
+	width: 200px;
+	height: 600px;
+}
+
+.searchPanel{
+	position: absolute;
+	top:35px;
+	right:25px;
+	width:250px;
+	height:300px;
+}
+
+.mainPanel{
+	position:absolute;
+	top:50px;
+	left:220px;
+	right:0px;
+	width:500;
+	height:1000px;
+}
+
+.genderCircle{
+	position: absolute;
+	top: 50px;
+	right: 10px;
+	width: 100px;
+	height: 130px;
+}
+
+.ageBar{
+	position: absolute;
+	top: 200px;
+	right: 10px;
+	width: 120px;
+	height: 200px;
+}
+
+.medBar{
+	position: absolute;
+	top: 440px;
+	right: 10px;
+	width: 120px;
+	height: 200px;
+}
+
+.raceCircle{
+	position: absolute;
+	top: 680px;
+	right: 10px;
+	width: 120px;
+	height: 130px;
+}
+
+body {
+  font: 10px sans-serif;
+}
+
+path {
+	stroke:steelblue;
+	stroke-width: 0.5;
+	fill:none;
+}
+
+circle {
+	stroke:purple;
+	fill:#eee;
+	stroke-width:1;
+}
+
+line.axis {
+	stroke:black;
+	stroke-width: 1;
+	fill:none;
+}
+
+.rule line {
+	stroke:#eee;
+	stroke-width: 0.5;
+	fill:none;
+}
+
+.rule line.axis {
+	stroke:#ccc;
+	stroke-width:2;
+	fill:none;
+}
