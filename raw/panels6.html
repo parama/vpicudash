@@ -529,58 +529,91 @@ function count_from_indices(start,end)
 
 //---------------------------Age Bars---------------------------//
 
+//get data arrays
 var dataA = makeAgeArrayFromIndices(0,9);
 var mortDataA = findMortDataFromIndices(0,9);
-//mortData = findMortData(5,15);
 
-var aBarW = 100,
-    aBarH = 100,
-    agey = d3.scale.ordinal().domain(d3.range(dataA.length)).rangeBands([0, aBarW]),
-    agex = d3.scale.linear().domain([0, 216]).range([0, aBarH]) ;
-	size = 600;
-	padding = 20;
+var aBarW = 120, //width of plot
+    aBarH = 100, //height of plot
+    agex = d3.scale.ordinal().domain(d3.range(dataA.length)).rangeBands([0, aBarW]),
+    agey = d3.scale.linear().domain([0, Math.max.apply( Math, dataA )]).range([0, aBarH])
+ 	padding = 20;
 	
+	//append svg object to ageBar div
 var ageBar = d3.select("#ageBar")
 	.append("svg:svg")
-	    .attr("width", aBarW + 40) //add padding for axis labels
-	    .attr("height", aBarH + 20)
+	    .attr("width", aBarW + 3*padding) //add padding for axis labels
+	    .attr("height", aBarH + 2*padding)
 	  .append("svg:g")
-	    .attr("transform", "translate(20,0)");
+	    .attr("transform", "translate(20,20)");
+	
+	//add title to chart
 	ageBar.append("svg:text")
 	  .attr("class", "title")
-	  .attr("y", 10 )
-	  //.attr("dy", ".71em")
-	  //.attr("transform", function(d) {return "translate(" + ((d % numPerRow) * (mainPanelW + margin)) + "," + (Math.floor(d/numPerRow) * (mainPanelH + margin) + textOffset) + ")";})
-	  .text("Age");
+	  .attr("y", 0)
+	  .attr("x", (aBarW)/2)
+	  .text("Age (Months)");
 
+	
+	//individual bars
 var aBars = ageBar.selectAll("g.bar")
     .data(dataA)
-  .enter().append("svg:g").attr("class", "bar");
-    //.attr("class", "oneBar")
-    //.attr("transform", function(d, i) { return "translate(0," + agey(i) + ")"; });
+  	.enter().append("svg:g").attr("class", "bar");
 
-aBars.append("svg:rect")
-    .attr("x", function(d,i) { return agey(i)+15; })
-    .attr("y", agex)
-    .attr("width", agey.rangeBand())
-    .attr("height", agex)
-	.style("fill", function(d,i){ 
-	if(mortDataA[i]==0)
-		return "steelblue";
-	else
-	 	return "lightgreen";
-	});
+	aBars.append("svg:rect")
+	    .attr("x", function(d,i) { return agex(i)+15; })
+	    .attr("y", function(d,i) { return aBarH-agey(dataA[i]);})
+	    .attr("width", agex.rangeBand())
+	    .attr("height", agey)
+		.style("fill", function(d,i){ 
+		if(mortDataA[i]==0)
+			return "steelblue";
+		else
+		 	return "lightgreen";
+		});
 
-aBars.append("svg:text")
-	.attr("transform","translate(25,0)")
-    .attr("x", function(d,i) { return 15+ agey(i)+ agey.rangeBand()/2;})
-    //.attr("y", agey.rangeBand() / 2)
-	.attr("y",agex)
-    .attr("dx", -6)
-    .attr("dy", ".35em")
-    .attr("fill", "black")
-    .attr("text-anchor", "end")
-    .text(function(d,i) { return dataA[i]; });
+	//add values to bars
+	/*aBars.append("svg:text")
+		.attr("transform","translate(25,0)")
+	    .attr("x", function(d,i) { return 15+ agex(i)+ agex.rangeBand()/2;})
+	    //.attr("y", agey.rangeBand() / 2)
+		.attr("y",agey)
+	    .attr("dx", -6)
+	    .attr("dy", ".35em")
+	    .attr("fill", "black")
+	    .attr("text-anchor", "end")
+	    .text(function(d,i) { return dataA[i]; });*/
+	
+var	aLines = ageBar.selectAll("g.line")
+			.data(agey.ticks(3))
+		.enter().append("svg:g").attr("class", "line");
+			/*.attr("x1",agex)
+			.attr("x2",agex)
+			.attr("y1",0)
+			.attr("y2",100)
+			.style("stroke","#000");*/
+			
+var ticksArray = agey.ticks(3).reverse();
+console.log(ticksArray);
+
+var aRules = ageBar.selectAll(".rule")
+			.data(ticksArray)
+		.enter().append("svg:text")
+			.attr("class","rule")
+			.attr("x",aBarW+padding+5)
+			.attr("y",function(d,i){return agey(ticksArray[i])+padding;})
+			.attr("dy",5)
+			.attr("text-anchor","middle")
+			.attr("fill","#bbb")
+			.text(function(d,i){ return (String)(ticksArray[3-i]);});
+			
+	aLines.append("svg:line")
+			.attr("x1",padding-5)
+			.attr("x2",padding+aBarW-5)
+			.attr("y1",function(d,i){return agey(ticksArray[i])+padding;})
+			.attr("y2",function(d,i){return agey(ticksArray[i])+padding;})
+			.style("stroke","#bbb");
+		
 ///////FUNCTIONS
 
 function makeAgeArrayFromEids(array)
@@ -952,8 +985,8 @@ raceCircle.append("svg:text")
 			console.log("Min range: " + minRange + " max range: "  + maxRange );
 			dataA = makeAgeArrayFromIndices(minRange,maxRange);
 			mortDataA = findMortDataFromIndices(minRange,maxRange);
-			agex = d3.scale.linear().domain([0, 216]).range([0, aBarW]);
-			agey = d3.scale.ordinal().domain(d3.range(dataA.length)).rangeBands([0, aBarH]);
+			agex = d3.scale.ordinal().domain(d3.range(dataA.length)).rangeBands([0, aBarW]),
+		    agey = d3.scale.linear().domain([0, Math.max.apply( Math, dataA )]).range([0, aBarH]);
 			
 			ageBar.selectAll(".bar").remove();
 			
@@ -961,10 +994,10 @@ raceCircle.append("svg:text")
 			    .data(dataA).enter().append("svg:g").attr("class", "bar");
 
 			aBars.append("svg:rect")
-			    .attr("x", 0)
-			    .attr("y", function(d,i) { return agey(i)+15; })
-			    .attr("width", agex)
-			    .attr("height", agey.rangeBand())
+			    .attr("x", function(d,i) { return agex(i)+15; })
+			    .attr("y", function(d,i) { return aBarH-agey(dataA[i]);})
+			    .attr("width", agex.rangeBand())
+			    .attr("height", agey)
 				.style("fill", function(d,i){ 
 					if(mortDataA[i]==0)
 						return "steelblue";
@@ -972,15 +1005,6 @@ raceCircle.append("svg:text")
 					 	return "lightgreen";
 				});
 
-			aBars.append("svg:text")
-				.attr("transform","translate(25,0)")
-			    .attr("x", agex)
-				.attr("y",function(d,i) { return 15+ agey(i)+ agey.rangeBand()/2;})
-			    .attr("dx", -6)
-			    .attr("dy", ".35em")
-			    .attr("fill", "black")
-			    .attr("text-anchor", "end")
-			    .text(function(d,i) { return dataA[i]; });
 			
 			// Medication Bars
 			var dataM = medication_count_from_indices(minRange,maxRange);
@@ -1020,7 +1044,9 @@ raceCircle.append("svg:text")
 			raceCircle.selectAll(".arc").remove();
 			race_data = race_count_from_indices(minRange,maxRange);
 			
-			var race_arcs = raceCircle.selectAll(".arc").data(race_donut(race_data), function(d) {return String(d);}).enter().append("svg:g")
+			var race_arcs = raceCircle.selectAll(".arc")
+				.data(race_donut(race_data), function(d) {return String(d);})
+				.enter().append("svg:g")
 			    .attr("class", "arc")
 			    .attr("transform", "translate(" + rCRad + "," + (rCRad + 15) + ")")
 				.append("svg:path")
@@ -1028,12 +1054,13 @@ raceCircle.append("svg:text")
 				.attr("d", race_arc)
 			    .style("fill", function(d, i) { console.log("trying to fill: " + i); return race_color(i); });
 			
-			arcs.append("svg:text")
+			var race_arcs = raceCircle.selectAll(".arc")
+					.append("svg:text")
 				    .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
 				    .attr("dy", ".35em")
 				    .attr("text-anchor", "middle")
-				    .attr("display", function(d) { return d.value > .15 ? null : "none"; })
-				    .text(function(d, i) { return d.value.toFixed(2); });	
+				    .attr("display", function(d) { return d.value > .009 ? null : "none"; })
+				    .text(function(d, i) { return raceNames[i]; });	
 		}
 
 /////////~~~~~~~~~~~~~~~~~~~FUNCTIONS BEGIN HERE~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
