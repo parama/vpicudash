@@ -40,6 +40,7 @@
 			
 		<!--Div Declarations!-->
 		
+	<div class="container-fluid">
 		<!-- Patient Summary Header Bar Row-->
 		<div class="row-fluid">
 		
@@ -76,7 +77,7 @@
 			        aggregate
 			      </button><p>
 			    </div>
-				-->
+				
 
 				<div class="mainPanel" id="mainPanel">
 					<button id="aggregateButton">
@@ -84,7 +85,8 @@
 				      </button>
 				</div>
 				<div class="title" id = "title"></div>
-
+				
+				-->
 
 				<!-- END Time Series Addition-->
 			
@@ -93,32 +95,39 @@
 			<!--Column 3: Patient Plots - Diagnosis, Age->
 			<div class="span2">
 			
-			<div class="row-fluid">
+				<div class="row-fluid">
 			
-			</div>
-			
-			<div class="row-fluid">
-				<div class="ageBar" id="ageBar">
 				</div>
-			</div>
 			
-			</div>
-			
-		</div>
+				<div class="row-fluid">
+					<div class="ageBar" id="ageBar">
+				</div>
 				
-		
-		<div class="genderCircle" id="genderCircle">
+			</div>
+			
+			<!--Column 4: Patient Plots - Medications, Gender, Ethnicity->
+			<!--<div class="span2">
+			
+				<div class="row-fluid">
+					<div class="medBar" id="medBar">
+					</div>
+				</div>
+			
+				<div class="row-fluid">
+					<div class="genderCircle" id="genderCircle">
+					</div>
+				</div>
+				
+				<div class="row-fluid">
+					<div class="raceCircle" id="raceCircle">
+					</div>
+				</div>
+				
+			</div>-->
+			
 		</div>
-		
-		<div class="ageBar" id="ageBar">
-		</div>
-		
-		<div class="medBar" id="medBar">
-		</div>
-		
-		<div class="raceCircle" id="raceCircle">
-		</div>
-		
+	</div>
+
 		<script type="text/javascript">
 		
 //D3 Starts here!
@@ -156,8 +165,10 @@
 			
 		patientSummaryBar.selectAll("rect")
 		    .data([1]).enter().append("svg:rect")
-		    .attr("width", 1300)
-		    .attr("height", 600)
+		    //.attr("width", 1300)
+		    //.attr("height", 60)
+			.attr("width", 940)
+		    .attr("height", 60)
 			.style("fill", "steelblue")
 			.style("stroke", "white");
 			

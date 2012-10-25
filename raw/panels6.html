@@ -1,25 +1,24 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<!-- Title -->
 		<title>EHR Dashboard</title>
+		
+		<!-- Styles -->
 		<link type="text/css" rel="stylesheet" href="styles/chla_dashboard.css"/>
+		
+		<!-- Libraries -->
 	    <script type="text/javascript" src="lib/d3.js"></script>
 		<script type="text/javascript" src="lib/d3.layout.js"></script>
+		
+		<!-- Data Sets -->
 		<script type="text/javascript" src="data/episode_id_map.js"></script>
 		<script type="text/javascript" src="data/physiodata_alternate.js"></script>
 		<script type="text/javascript" src="data/scores_episodeid_4162.js"></script>
 		<script type="text/javascript" src="data/outcomes.js"></script>
 	    <script type="text/javascript" src="data/data.js"></script>
 		<script type="text/javascript" src="data/demographics.js"></script>
-		<script type="text/javascript" src="data/medications.js"></script>
-	    <style type="text/css">
-
-/*ASSIGN POSITIONING OF COMPONENTS*/
-
-/*Before you run: if in firefox, comment out all console log commands*/	
-		<style>
-		
-		</style>
+		<script type="text/javascript" src="data/medications.js"></script>	
 
 	</head>
 
@@ -30,26 +29,13 @@
 		<!--Div Declarations!-->
 				
 		<!-- Time Series Addition-->
-		<!--
-		
-		<div id="chart">
-	      <button id="increment">
-	        +
-	      </button
-	      ><button id="decrement">
-	        -
-	      </button>
-	      <button id="aggregateButton">
-	        aggregate
-	      </button><p>
-	    </div>
-		-->
 
 		<div class="mainPanel" id="mainPanel">
 			<button id="aggregateButton">
 		        aggregate
 		      </button>
 		</div>
+		
 		<div class="title" id = "title"></div>
 		
 
@@ -82,14 +68,11 @@
 
 	var currentPatient = 0; //can be 0 or 1, for the 2 patients we have
 
-////---------Patient Bar	
+//---------------------------PATIENT SUMMARY BAR------------------------------------
 
 // 0 = female, 1 = male
 
-/*[
-  {"Year": "1997", "Make": "Ford", "Model": "E350", "Length": "2.34"},
-  {"Year": "2000", "Make": "Mercury", "Model": "Cougar", "Length": "2.38"}
-]*/
+
 		var infoBarIntro = "CHLA PICU DASHBOARD | CURRENT PATIENT DATA | "
 		var pbdata = [
 		{"EID" : 4162, "Sex" : "f", "Race" : 3, "Age" : 185, "Weight" : 100},
@@ -111,8 +94,8 @@
 			
 		patientSummaryBar.selectAll("rect")
 		    .data([1]).enter().append("svg:rect")
-		    .attr("width", 1300)
-		    .attr("height", 600)
+		    .attr("width", 800)
+		    .attr("height", 60)
 			.style("fill", "steelblue")
 			.style("stroke", "white");
 			
@@ -125,21 +108,24 @@
 
 ////---------Selection Bar			
 
+		// declare data arrays, initialize variables
+		
 		var dataP = makeScoreArray(),
 			dataB = scoreArray(60), //shows the top 100 similar patients
 			mortData = cropArray(60, died);
 			//dataB = binScoreArray(100);
-		//DM:
+		
 		var mouseIsDown = false,
 			minRange = Number.MAX_VALUE;
 			maxRange = Number.MIN_VALUE;
-			
-		var tBarW = 200,
-		    tBarH = 600,
+		
+		//set size parameters for the selection bar here	
+		var tBarW = 100,
+		    tBarH = 500,
 		    tx = d3.scale.linear().domain([0, 1]).range([0, tBarW]),
 		    ty = d3.scale.ordinal().domain(d3.range(dataB.length)).rangeBands([0, tBarH], .2);
-			size = 600;
-			padding = 20,
+			size = 500;
+			padding = 5,
 			barMargin = 15;
 
 		var tSelectionBar = d3.select("#selectionBar")
@@ -151,16 +137,14 @@
 			tSelectionBar.append("svg:text")
 			  .attr("class", "title")
 			  .attr("y", 10 )
-			  //.attr("dy", ".71em")
-			  //.attr("transform", function(d) {return "translate(" + ((d % numPerRow) * (mainPanelW + margin)) + "," + (Math.floor(d/numPerRow) * (mainPanelH + margin) + textOffset) + ")";})
-			  .text("Patient Selection Bar");
+			  .text("Patient Selection Bar"); // added title here
 
+		// select all components that correspond to g.bar and attach svg:g to it
 		var tbars = tSelectionBar.selectAll("g.bar")
 		    .data(dataB)
 		  .enter().append("svg:g");
-		    //.attr("class", "oneBar")
-		    //.attr("transform", function(d, i) { return "translate(0," + ty(i) + ")"; });
-
+		
+		// attach svg rectangles to the g.bar components
 		tbars.append("svg:rect")
             .attr("x", 0)
             .attr("y", function(d,i) { return ty(i)+barMargin; })
@@ -314,10 +298,10 @@
 		//---------------------------general setup---------------------------//
 		// mini panel size variables
 		//TODO: make each panel an SVG element so that it will reposition
-		var mainPanelW=300,
-			mainPanelH=100,
-			margin = 30,
-			textOffset = 18;
+		var mainPanelW=150,
+			mainPanelH=60,
+			margin = 25,
+			textOffset = 10;
 			numPerRow = 3;
 
 		// default interaction settings
@@ -368,13 +352,13 @@
 
 		//---------------------------title panel---------------------------//
 		//TODO: refactor this -- all it does is display selection_count
-		var titlePanel = d3.select(document.getElementById("title"))
+		/*var titlePanel = d3.select(document.getElementById("title"))
 		   .append("svg:svg");
 
 		var title = titlePanel.append("svg:text")
 		  .attr("class", "title")
 		  .attr("dy", ".71em")
-		  .text(selection_size);
+		  .text(selection_size);*/
 		
 		//---------------------------main vis---------------------------//
 		var vis = d3.select(document.getElementById("mainPanel")).append("svg:svg");
@@ -413,8 +397,8 @@
 			.selectAll("g").data(d3.range(vars.length))
 			.enter().append("svg:rect")	
 			.attr("transform", function(d) {return "translate(" + ((d % numPerRow) * (mainPanelW + margin)) + "," + (Math.floor(d/numPerRow) * (mainPanelH + margin) + margin) + ")";})
-			.attr("width", 300)
-			.attr("height", 100);	
+			.attr("width", 150)
+			.attr("height", 60);	
 
 		//Chart titles
 		vis.append("svg:g")
@@ -422,7 +406,7 @@
 		  .append("svg:text")
 		  .attr("class", "title")
 		  .attr("dy", ".71em")
-		  .attr("transform", function(d) {return "translate(" + ((d % numPerRow) * (mainPanelW + margin)) + "," + (Math.floor(d/numPerRow) * (mainPanelH + margin) + textOffset) + ")";})
+		  .attr("transform", function(d) {return "translate(" + ((d % numPerRow) * (mainPanelW + margin)) + "," + (Math.floor(d/numPerRow) * (mainPanelH + margin) + textOffset +5) + ")";})
 		//DM: include units
 		  //.text(function(d) { return variables[d].name;});
 		  .text(function(d) { return variables[d].name + "(" + variables[d].units + ")";});
@@ -455,17 +439,17 @@
 
 //---------------------------Gender Circles---------------------------//
 
-var gCw = 100,
-    gCh = 100;
+//define the diameter of the circle
+var gCw = 50,
+    gCh = 50;
 var genderCircle = d3.select("#genderCircle")
   .append("svg:svg")
     //.data([dataGP])
     .attr("width", gCw)
-    .attr("height", gCh+30);
+    .attr("height", gCh+15);
 
-var gCw = 100,
-    gCh = 100,
-    gCr = Math.min(gCw, gCh) / 2,
+
+var gCr = Math.min(gCw, gCh) / 2,
 	dataGP = count_from_indices(minRange,maxRange)
 	color = function(i) {
 		if(i==0) 
@@ -476,12 +460,13 @@ var gCw = 100,
     donut = d3.layout.pie().sort(d3.descending),
     arc = d3.svg.arc().innerRadius(gCr * .4).outerRadius(gCr);
 
+//title of circle plot
 genderCircle.append("svg:text")
   .attr("class", "title")
   .attr("y", 10 )
-  .attr("x", gCw/2-30)
+  .attr("x", gCw/2-15)
   .attr("fill", "black")
-  .text("Gender Ratio")
+  .text("Gender")
   .style("text-align","center");
   
 var arcs = genderCircle.selectAll("g.arc")
@@ -544,15 +529,14 @@ function count_from_indices(start,end)
 
 //---------------------------Age Bars---------------------------//
 
-//var ageNames = ["Cefotaxime", "Dopamine", "Epinephrine", "Milrinone", "Piperacillin", "Taxobactam", "Vancomyin"];
-var dataA = makeAgeArrayFromIndices(0,2);
-var mortDataA = findMortDataFromIndices(0,2);
+var dataA = makeAgeArrayFromIndices(0,9);
+var mortDataA = findMortDataFromIndices(0,9);
 //mortData = findMortData(5,15);
 
 var aBarW = 100,
-    aBarH = 200,
-    agex = d3.scale.linear().domain([0, 216]).range([0, aBarW]),
-    agey = d3.scale.ordinal().domain(d3.range(dataA.length)).rangeBands([0, aBarH]);
+    aBarH = 100,
+    agey = d3.scale.ordinal().domain(d3.range(dataA.length)).rangeBands([0, aBarW]),
+    agex = d3.scale.linear().domain([0, 216]).range([0, aBarH]) ;
 	size = 600;
 	padding = 20;
 	
@@ -576,10 +560,10 @@ var aBars = ageBar.selectAll("g.bar")
     //.attr("transform", function(d, i) { return "translate(0," + agey(i) + ")"; });
 
 aBars.append("svg:rect")
-    .attr("x", 0)
-    .attr("y", function(d,i) { return agey(i)+15; })
-    .attr("width", agex)
-    .attr("height", agey.rangeBand())
+    .attr("x", function(d,i) { return agey(i)+15; })
+    .attr("y", agex)
+    .attr("width", agey.rangeBand())
+    .attr("height", agex)
 	.style("fill", function(d,i){ 
 	if(mortDataA[i]==0)
 		return "steelblue";
@@ -589,9 +573,9 @@ aBars.append("svg:rect")
 
 aBars.append("svg:text")
 	.attr("transform","translate(25,0)")
-    .attr("x", agex)
+    .attr("x", function(d,i) { return 15+ agey(i)+ agey.rangeBand()/2;})
     //.attr("y", agey.rangeBand() / 2)
-	.attr("y",function(d,i) { return 15+ agey(i)+ agey.rangeBand()/2;})
+	.attr("y",agex)
     .attr("dx", -6)
     .attr("dy", ".35em")
     .attr("fill", "black")
@@ -648,8 +632,8 @@ function findMortDataFromEids(array)
 		// put defaults in me here
 		var dataM = medication_count_from_indices(0,12);
 		
-		var mBarW = 120,
-		    mBarH = 200,
+		var mBarW = 150,
+		    mBarH = 150,
 		    mx = d3.scale.linear().domain([0, 1]).range([0, mBarW]),
 		    medy = d3.scale.ordinal().domain(d3.range(dataM.length)).rangeBands([0, mBarH], .2);
 			size = 600;
@@ -672,7 +656,7 @@ function findMortDataFromEids(array)
 
 		mbars.append("svg:rect")
             .attr("x", 0)
-            .attr("y", function(d,i) { return medy(i)+15; })
+            .attr("y", function(d,i) { return medy(i)+7; })
 		    .attr("width", mx)
 		    .attr("height", medy.rangeBand())
 			.style("fill","mediumslateblue");
@@ -680,7 +664,7 @@ function findMortDataFromEids(array)
 		mbars.append("svg:text")
 		    .attr("x", mx)
 			.attr("class", "drugLabelText")
-			.attr("y",function(d,i) { return medy(i)+30; })
+			.attr("y",function(d,i) { return medy(i)+15; })
 		    //.attr("dx", -6)
 		    .attr("dy", ".35em")
 		    .attr("fill", "white")
@@ -693,7 +677,7 @@ function findMortDataFromEids(array)
 			.attr("transform","translate(65,0)")
 		    .attr("x", mx)
 		    //.attr("y", medy.rangeBand() / 2)
-			.attr("y",function(d,i) { return medy(i)+30; })
+			.attr("y",function(d,i) { return medy(i)+15; })
 		    .attr("dx", -6)
 		    .attr("dy", ".35em")
 		    .attr("fill", "black")
@@ -763,8 +747,8 @@ function findMortDataFromEids(array)
 
 var raceNames = ["U", "W", "B", "L", "C", "J", "PI", "O", "K"];
 
-var rCw = 150,
-    rCh = 150,
+var rCw = 50,
+    rCh = 50,
     rCRad = Math.min(rCw, rCh) / 2,
     race_data = race_count_from_indices(5,15),
     race_color = d3.scale.category20(),
@@ -793,7 +777,7 @@ arcs.append("svg:text")
     .attr("dy", ".35em")
     .attr("text-anchor", "middle")
     .attr("display", function(d) { return d.value > .009 ? null : "none"; })
-    .text(function(d, i) { return raceNames[i] + "(" + d.value.toFixed(2) + ")"; });
+    .text(function(d, i) { return raceNames[i] /*+ "(" + d.value.toFixed(2) + ")"*/; });
 
 raceCircle.append("svg:text")
   .attr("class", "title")
@@ -901,7 +885,7 @@ raceCircle.append("svg:text")
 		//---------------------------refresh functions---------------------------//
 
 		function redraw_lines(){
-			title.text(selection_size);
+			//title.text(selection_size);
 			//take care of the red selection lines with the updated data selection
 			var lines = vis.selectAll(".line")
 				.data(function() {return crossAll(vars_selected)}, String); //key the data!!! Otherwise it's majorly screwey
