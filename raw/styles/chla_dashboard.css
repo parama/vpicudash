@@ -146,8 +146,8 @@ line.axis {
 
 .medBar{
 	position: absolute;
-	top: 440px;
-	right: 10px;
+	top: 300px;
+	left: 650px;
 	width: 120px;
 	height: 200px;
 }

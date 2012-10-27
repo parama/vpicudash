@@ -72,44 +72,44 @@
 
 // 0 = female, 1 = male
 
-
-		var infoBarIntro = "CHLA PICU DASHBOARD | CURRENT PATIENT DATA | "
+		//declare data for 3 possible demo patients
+		
+		var infoBarIntro = "CHLA PICU DASHBOARD | CURRENT PATIENT DATA | ";
 		var pbdata = [
-		{"EID" : 4162, "Sex" : "f", "Race" : 3, "Age" : 185, "Weight" : 100},
-		{"EID" : 10215, "Sex" : "f", "Race" : 7, "Age" : 94, "Weight" : 18},
-		{"EID" : 10091, "Sex" : "f", "Race" : 7, "Age" : 94, "Weight" : 18}
+			{"EID" : 4162, "Sex" : "f", "Race" : 3, "Age" : 185, "Weight" : 100},
+			{"EID" : 10215, "Sex" : "f", "Race" : 7, "Age" : 94, "Weight" : 18},
+			{"EID" : 10091, "Sex" : "f", "Race" : 7, "Age" : 94, "Weight" : 18}
 		];
 		
 		var pbstrings = [
-		"ID: 4162		SEX: F			RACE: 3			AGE: 185 MONTHS			WEIGHT: 100 LBS",
-		"ID: 10215		SEX: F			RACE: 7			AGE:  94 MONTHS			WEIGHT:  18 LBS",
-		"ID: 10091		SEX: F			RACE: 7			AGE:  94 MONTHS			WEIGHT:  18 LBS"
+			"ID: 4162		SEX: F			RACE: 3			AGE: 185 MONTHS			WEIGHT: 100 LBS",
+			"ID: 10215		SEX: F			RACE: 7			AGE:  94 MONTHS			WEIGHT:  18 LBS",
+			"ID: 10091		SEX: F			RACE: 7			AGE:  94 MONTHS			WEIGHT:  18 LBS"
 		];
 		
 		var patientSummaryBar = d3.select("#patientSummary")
-			.append("svg:svg")
-			//.attr("width", 900)
-			//.attr("height", 30)
-			  .append("svg:g");
+				.append("svg:svg")
+				.append("svg:g");
 			
-		patientSummaryBar.selectAll("rect")
-		    .data([1]).enter().append("svg:rect")
-		    .attr("width", 800)
-		    .attr("height", 60)
-			.style("fill", "steelblue")
-			.style("stroke", "white");
+			//create blue background rectangle
+			patientSummaryBar.selectAll("rect")
+		    	.data([1]).enter().append("svg:rect")
+			    .attr("width", 800)
+			    .attr("height", 60)
+				.style("fill", "steelblue")
+				.style("stroke", "white");
 			
-		patientSummaryBar.append("svg:text")
-			.text(infoBarIntro + pbstrings[currentPatient])
-			.attr("x", 20)
-			.attr("y", 20)
-			.style("font-size", "12")
-			.style("fill", "white");
+			//construct and attach patient summary string
+			patientSummaryBar.append("svg:text")
+				.text(infoBarIntro + pbstrings[currentPatient])
+				.attr("x", 20)
+				.attr("y", 20)
+				.style("font-size", "12")
+				.style("fill", "white");
 
-////---------Selection Bar			
+//---------------------------PATIENT SELECTION BAR------------------------------------		
 
 		// declare data arrays, initialize variables
-		
 		var dataP = makeScoreArray(),
 			dataB = scoreArray(60), //shows the top 100 similar patients
 			mortData = cropArray(60, died);
@@ -134,19 +134,23 @@
 			    .attr("height", tBarH + 20)
 			  .append("svg:g")
 			    .attr("transform", "translate(20,0)");
+			
+			//add chart title
 			tSelectionBar.append("svg:text")
 			  .attr("class", "title")
 			  .attr("y", 10 )
-			  .text("Patient Selection Bar"); // added title here
+			  .text("Patient Selection Bar"); 
 
 		// select all components that correspond to g.bar and attach svg:g to it
 		var tbars = tSelectionBar.selectAll("g.bar")
 		    .data(dataB)
 		  .enter().append("svg:g");
 		
-		// attach svg rectangles to the g.bar components
+		// individual bars in chart
 		tbars.append("svg:rect")
-            .attr("x", 0)
+            
+			//assign appearance qualities of individual bars
+			.attr("x", 0)
             .attr("y", function(d,i) { return ty(i)+barMargin; })
 		    .attr("width", function(d,i) {return tx(d.score);})
 		    .attr("height", ty.rangeBand())
@@ -158,6 +162,8 @@
 				})
 			.attr("pointer-events", "all")
 			.attr("visibility", function(d, i) {return d.index == 0 ? "hidden" : "visible";})     
+			
+			//assign dynamic properties (changing color via hovering, changing selected patient range)
 			.on("mousedown", mousedown)
 			
 			.on("mouseout", function(d,i) {
@@ -176,8 +182,6 @@
 							else
 						 		return "lightgreen";
 						});
-				//DM: didn't see this function doing anything
-				//highlight(-1);
 			})
 			
 			
@@ -189,8 +193,6 @@
 					if(minRange > d.index)
 						minRange = d.index;
 				}
-				//DM: this function wasn't doing anything...
-				//highlight(i);
 			});
 			
 			
@@ -293,7 +295,7 @@
 			redraw_sub_panels();
 		}
 	
-////---------TIME SERIES
+//---------------------------PATIENT TIME SERIES------------------------------------
 
 		//---------------------------general setup---------------------------//
 		// mini panel size variables
@@ -349,16 +351,7 @@
 		vars_selected = []; //vars_selected contains the (selection_size) most similar cases to the subject, as well as the subject
 		initializeSelection();
 		var aggregates_selected = aggregate(vars_selected);
-
-		//---------------------------title panel---------------------------//
-		//TODO: refactor this -- all it does is display selection_count
-		/*var titlePanel = d3.select(document.getElementById("title"))
-		   .append("svg:svg");
-
-		var title = titlePanel.append("svg:text")
-		  .attr("class", "title")
-		  .attr("dy", ".71em")
-		  .text(selection_size);*/
+		
 		
 		//---------------------------main vis---------------------------//
 		var vis = d3.select(document.getElementById("mainPanel")).append("svg:svg");
@@ -439,225 +432,213 @@
 
 //---------------------------Gender Circles---------------------------//
 
-//define the diameter of the circle
-var gCw = 50,
-    gCh = 50;
-var genderCircle = d3.select("#genderCircle")
-  .append("svg:svg")
-    //.data([dataGP])
-    .attr("width", gCw)
-    .attr("height", gCh+15);
+		//define the diameter of the circle
+		var gCw = 50,
+		    gCh = 50;
+		var genderCircle = d3.select("#genderCircle")
+		  .append("svg:svg")
+		    //.data([dataGP])
+		    .attr("width", gCw)
+		    .attr("height", gCh+15);
 
 
-var gCr = Math.min(gCw, gCh) / 2,
-	dataGP = count_from_indices(minRange,maxRange)
-	color = function(i) {
-		if(i==0) 
-			return "steelblue" 
-		else 
-			return "lightpink"
-		},
-    donut = d3.layout.pie().sort(d3.descending),
-    arc = d3.svg.arc().innerRadius(gCr * .4).outerRadius(gCr);
+		var gCr = Math.min(gCw, gCh) / 2,
+			dataGP = count_from_indices(minRange,maxRange)
+			color = function(i) {
+				if(i==0) 
+					return "steelblue" 
+				else 
+					return "lightpink"
+				},
+		    donut = d3.layout.pie().sort(d3.descending),
+		    arc = d3.svg.arc().innerRadius(gCr * .4).outerRadius(gCr);
 
-//title of circle plot
-genderCircle.append("svg:text")
-  .attr("class", "title")
-  .attr("y", 10 )
-  .attr("x", gCw/2-15)
-  .attr("fill", "black")
-  .text("Gender")
-  .style("text-align","center");
+		//title of circle plot
+		genderCircle.append("svg:text")
+		  .attr("class", "title")
+		  .attr("y", 10 )
+		  .attr("x", gCw/2-15)
+		  .attr("fill", "black")
+		  .text("Gender")
+		  .style("text-align","center");
   
-var arcs = genderCircle.selectAll("g.arc")
-    .data(donut(dataGP), function(d) {return String(d);})
-  .enter().append("svg:g")
-    .attr("class", "arc")
-    .attr("transform", "translate(" + gCr + "," + (gCr + 15) + ")");
+		var arcs = genderCircle.selectAll("g.arc")
+		    .data(donut(dataGP), function(d) {return String(d);})
+		  .enter().append("svg:g")
+		    .attr("class", "arc")
+		    .attr("transform", "translate(" + gCr + "," + (gCr + 15) + ")");
 
-arcs.append("svg:path")
-	.attr("class", "gender")
-	.attr("d", arc)
-    .style("fill", function(d, i) { return color(i); });
+		arcs.append("svg:path")
+			.attr("class", "gender")
+			.attr("d", arc)
+		    .style("fill", function(d, i) { return color(i); });
 
-arcs.append("svg:text")
-    .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
-    .attr("dy", ".35em")
-    .attr("text-anchor", "middle")
-    .attr("display", function(d) { return d.value > .15 ? null : "none"; })
-    .text(function(d, i) { return d.value.toFixed(2); });
+		arcs.append("svg:text")
+		    .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+		    .attr("dy", ".35em")
+		    .attr("text-anchor", "middle")
+		    .attr("display", function(d) { return d.value > .15 ? null : "none"; })
+		    .text(function(d, i) { return d.value.toFixed(2); });
 
-//takes in array with episode ids for patients, returns array with values of percent males and females in population
-function count_from_episode_ids(array)
-{
-	var count = 0;
-	var ratioArray = [];
-	
-	for(var i = 0; i < array.length; i++)
-	{
-		//look up and store index of episode id
-		var indy = eid_map["eid" + array[i]];
-		if(sex[indy]=="m")
+		//takes in array with episode ids for patients, returns array with values of percent males and females in population
+		function count_from_episode_ids(array)
 		{
-			count=count+1;
-		}	
-	}
-	var ratio = count/array.length;
-	ratioArray.push(ratio);
-	ratioArray.push(1-ratio);
-	return ratioArray;
-}
-
-function count_from_indices(start,end)
-{
-	var count = 0;
-	var ratioArray = [];
+			var count = 0;
+			var ratioArray = [];
 	
-	for(var i = 0; i < (end-start+1); i++)
-	{
-		if(sex[start+i]=="m")
-		{
-			count=count+1;
-			//console.log("value was " + sex[start+i]);
+			for(var i = 0; i < array.length; i++)
+			{
+				//look up and store index of episode id
+				var indy = eid_map["eid" + array[i]];
+				if(sex[indy]=="m")
+				{
+					count=count+1;
+				}	
+			}
+			var ratio = count/array.length;
+			ratioArray.push(ratio);
+			ratioArray.push(1-ratio);
+			return ratioArray;
 		}
-	}
-	var ratio = count/(end-start+1);
-	ratioArray.push(ratio);
-	ratioArray.push(1-ratio);
-	return ratioArray;
-}
+
+		function count_from_indices(start,end)
+		{
+			var count = 0;
+			var ratioArray = [];
+	
+			for(var i = 0; i < (end-start+1); i++)
+			{
+				if(sex[start+i]=="m")
+				{
+					count=count+1;
+					//console.log("value was " + sex[start+i]);
+				}
+			}
+			var ratio = count/(end-start+1);
+			ratioArray.push(ratio);
+			ratioArray.push(1-ratio);
+			return ratioArray;
+		}
 
 //---------------------------Age Bars---------------------------//
 
-//get data arrays
-var dataA = makeAgeArrayFromIndices(0,9);
-var mortDataA = findMortDataFromIndices(0,9);
+		//get data arrays
+		var dataA = makeAgeArrayFromIndices(0,9);
+		var mortDataA = findMortDataFromIndices(0,9);
 
-var aBarW = 120, //width of plot
-    aBarH = 100, //height of plot
-    agex = d3.scale.ordinal().domain(d3.range(dataA.length)).rangeBands([0, aBarW]),
-    agey = d3.scale.linear().domain([0, Math.max.apply( Math, dataA )]).range([0, aBarH])
- 	padding = 20;
+		var aBarW = 120, //width of plot
+		    aBarH = 100, //height of plot
+		    agex = d3.scale.ordinal().domain(d3.range(dataA.length)).rangeBands([0, aBarW]),
+		    agey = d3.scale.linear().domain([0, Math.max.apply( Math, dataA )]).range([0, aBarH])
+		 	padding = 20;
 	
-	//append svg object to ageBar div
-var ageBar = d3.select("#ageBar")
-	.append("svg:svg")
-	    .attr("width", aBarW + 3*padding) //add padding for axis labels
-	    .attr("height", aBarH + 2*padding)
-	  .append("svg:g")
-	    .attr("transform", "translate(20,20)");
+			//append svg object to ageBar div
+		var ageBar = d3.select("#ageBar")
+			.append("svg:svg")
+			    .attr("width", aBarW + 3*padding) //add padding for axis labels
+			    .attr("height", aBarH + 2*padding)
+			  .append("svg:g")
+			    .attr("transform", "translate(20,20)");
 	
-	//add title to chart
-	ageBar.append("svg:text")
-	  .attr("class", "title")
-	  .attr("y", 0)
-	  .attr("x", (aBarW)/2)
-	  .text("Age (Months)");
+			//add title to chart
+			ageBar.append("svg:text")
+			  .attr("class", "title")
+			  .attr("y", 0)
+			  .attr("x", (aBarW)/2)
+			  .text("Age (Months)");
 
 	
-	//individual bars
-var aBars = ageBar.selectAll("g.bar")
-    .data(dataA)
-  	.enter().append("svg:g").attr("class", "bar");
+			//individual bars
+		var aBars = ageBar.selectAll("g.bar")
+		    .data(dataA)
+		  	.enter().append("svg:g").attr("class", "bar");
 
-	aBars.append("svg:rect")
-	    .attr("x", function(d,i) { return agex(i)+15; })
-	    .attr("y", function(d,i) { return aBarH-agey(dataA[i]);})
-	    .attr("width", agex.rangeBand())
-	    .attr("height", agey)
-		.style("fill", function(d,i){ 
-		if(mortDataA[i]==0)
-			return "steelblue";
-		else
-		 	return "lightgreen";
-		});
+			aBars.append("svg:rect")
+			    .attr("x", function(d,i) { return agex(i)+15; })
+			    .attr("y", function(d,i) { return aBarH-agey(dataA[i]);})
+			    .attr("width", agex.rangeBand())
+			    .attr("height", agey)
+				.style("fill", function(d,i){ 
+				if(mortDataA[i]==0)
+					return "steelblue";
+				else
+				 	return "lightgreen";
+				});
 
-	//add values to bars
-	/*aBars.append("svg:text")
-		.attr("transform","translate(25,0)")
-	    .attr("x", function(d,i) { return 15+ agex(i)+ agex.rangeBand()/2;})
-	    //.attr("y", agey.rangeBand() / 2)
-		.attr("y",agey)
-	    .attr("dx", -6)
-	    .attr("dy", ".35em")
-	    .attr("fill", "black")
-	    .attr("text-anchor", "end")
-	    .text(function(d,i) { return dataA[i]; });*/
-	
-var	aLines = ageBar.selectAll("g.line")
-			.data(agey.ticks(3))
-		.enter().append("svg:g").attr("class", "line");
-			/*.attr("x1",agex)
-			.attr("x2",agex)
-			.attr("y1",0)
-			.attr("y2",100)
-			.style("stroke","#000");*/
-			
-var ticksArray = agey.ticks(3).reverse();
-console.log(ticksArray);
 
-var aRules = ageBar.selectAll(".rule")
-			.data(ticksArray)
-		.enter().append("svg:text")
-			.attr("class","rule")
-			.attr("x",aBarW+padding+5)
-			.attr("y",function(d,i){return agey(ticksArray[i])+padding;})
-			.attr("dy",5)
-			.attr("text-anchor","middle")
-			.attr("fill","#bbb")
-			.text(function(d,i){ return (String)(ticksArray[3-i]);});
-			
-	aLines.append("svg:line")
-			.attr("x1",padding-5)
-			.attr("x2",padding+aBarW-5)
-			.attr("y1",function(d,i){return agey(ticksArray[i])+padding;})
-			.attr("y2",function(d,i){return agey(ticksArray[i])+padding;})
-			.style("stroke","#bbb");
+			//background scale lines
+		var	aLines = ageBar.selectAll("g.line")
+					.data(agey.ticks(3))
+				.enter().append("svg:g").attr("class", "line");
 		
-///////FUNCTIONS
+			
+		var ticksArray = agey.ticks(3).reverse();
+		console.log(ticksArray);
 
-function makeAgeArrayFromEids(array)
-{
-	var selected = [];
-	for(var i = 0; i < array.length; i++){
-		var indy = eid_map["eid" + array[i]];
-		selected.push(ageInMonths[indy]);
-	}
-	return selected;
-}
+		var aRules = ageBar.selectAll(".rule")
+					.data(ticksArray)
+				.enter().append("svg:text")
+					.attr("class","rule")
+					.attr("x",aBarW+padding+5)
+					.attr("y",function(d,i){return agey(ticksArray[i])+padding;})
+					.attr("dy",5)
+					.attr("text-anchor","middle")
+					.attr("fill","#bbb")
+					.text(function(d,i){ return (String)(ticksArray[3-i]);});
+			
+			aLines.append("svg:line")
+					.attr("x1",padding-5)
+					.attr("x2",padding+aBarW-5)
+					.attr("y1",function(d,i){return agey(ticksArray[i])+padding;})
+					.attr("y2",function(d,i){return agey(ticksArray[i])+padding;})
+					.style("stroke","#bbb");
+		
+		///////FUNCTIONS
 
-function makeAgeArrayFromIndices(start,end)
-{
-	var selected = [];
-	console.log('in function');
-	for(var i = 0+start; i < end +1; i++){
-		var indy = i+start;
-		console.log("pushing " + ageInMonths[indy] + " at index " + indy);
-		selected.push(ageInMonths[indy]);
-	}
-	return selected;
-}
-
-function findMortDataFromIndices(start,end)
-{
-	var selected = [];
-	for(var i = 0+start; i < (end-start+1); i++){
-		var var_to_push = died[i];
-		selected.push(var_to_push);
-	}
-	return selected;
-}
-
-function findMortDataFromEids(array)
-{
-	var selected = [];
-	for(var i = 0; i < array.length; i++){
-		var indy = eid_map["eid" + array[i]];
-		var var_to_push = died[indy];
-		selected.push(var_to_push);
+		function makeAgeArrayFromEids(array)
+		{
+			var selected = [];
+			for(var i = 0; i < array.length; i++){
+				var indy = eid_map["eid" + array[i]];
+				selected.push(ageInMonths[indy]);
+			}
+			return selected;
 		}
-	return selected;
-}
+
+		function makeAgeArrayFromIndices(start,end)
+		{
+			var selected = [];
+			console.log('in function');
+			for(var i = 0+start; i < end +1; i++){
+				var indy = i+start;
+				console.log("pushing " + ageInMonths[indy] + " at index " + indy);
+				selected.push(ageInMonths[indy]);
+			}
+			return selected;
+		}
+
+		//find and return selected patient mortality
+		function findMortDataFromIndices(start,end)
+		{
+			var selected = [];
+			for(var i = 0+start; i < (end-start+1); i++){
+				var var_to_push = died[i];
+				selected.push(var_to_push);
+			}
+			return selected;
+		}
+		
+
+		function findMortDataFromEids(array)
+		{
+			var selected = [];
+			for(var i = 0; i < array.length; i++){
+				var indy = eid_map["eid" + array[i]];
+				var var_to_push = died[indy];
+				selected.push(var_to_push);
+				}
+			return selected;
+		}
 
 //---------------------------Medication Bar---------------------------//
 
@@ -665,12 +646,10 @@ function findMortDataFromEids(array)
 		// put defaults in me here
 		var dataM = medication_count_from_indices(0,12);
 		
-		var mBarW = 150,
-		    mBarH = 150,
+		var mBarW = 120,
+		    mBarH = 120,
 		    mx = d3.scale.linear().domain([0, 1]).range([0, mBarW]),
 		    medy = d3.scale.ordinal().domain(d3.range(dataM.length)).rangeBands([0, mBarH], .2);
-			size = 600;
-			padding = 20;
 			
 		var medBar = d3.select("#medBar")
 			.append("svg:svg")
@@ -778,47 +757,47 @@ function findMortDataFromEids(array)
 //---------------------------Race Circle---------------------------//
 
 
-var raceNames = ["U", "W", "B", "L", "C", "J", "PI", "O", "K"];
+		var raceNames = ["U", "W", "B", "L", "C", "J", "PI", "O", "K"];
 
-var rCw = 50,
-    rCh = 50,
-    rCRad = Math.min(rCw, rCh) / 2,
-    race_data = race_count_from_indices(5,15),
-    race_color = d3.scale.category20(),
-    race_donut = d3.layout.pie().sort(d3.descending),
-    race_arc = d3.svg.arc().innerRadius(rCRad * .4).outerRadius(rCRad);
+		var rCw = 50,
+		    rCh = 50,
+		    rCRad = Math.min(rCw, rCh) / 2,
+		    race_data = race_count_from_indices(5,15),
+		    race_color = d3.scale.category20(),
+		    race_donut = d3.layout.pie().sort(d3.descending),
+		    race_arc = d3.svg.arc().innerRadius(rCRad * .4).outerRadius(rCRad);
 
-var raceCircle = d3.select("#raceCircle")
-  .append("svg:svg")
-    //.data([race_data])
-    .attr("width", rCw)
-    .attr("height", rCh+30);
+		var raceCircle = d3.select("#raceCircle")
+		  .append("svg:svg")
+		    //.data([race_data])
+		    .attr("width", rCw)
+		    .attr("height", rCh+30);
 
-var arcs = raceCircle.selectAll("g.arc")
-    .data(race_donut(race_data))
-  .enter().append("svg:g")
-    .attr("class", "arc")
-    .attr("transform", "translate(" + rCRad + "," + (rCRad+15) + ")");
+		var arcs = raceCircle.selectAll("g.arc")
+		    .data(race_donut(race_data))
+		  .enter().append("svg:g")
+		    .attr("class", "arc")
+		    .attr("transform", "translate(" + rCRad + "," + (rCRad+15) + ")");
 
-arcs.append("svg:path")
-	.attr("class", "race")
-	.attr("d", race_arc)
-    .style("fill", function(d, i) { return race_color(i); });
+		arcs.append("svg:path")
+			.attr("class", "race")
+			.attr("d", race_arc)
+		    .style("fill", function(d, i) { return race_color(i); });
 
-arcs.append("svg:text")
-    .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
-    .attr("dy", ".35em")
-    .attr("text-anchor", "middle")
-    .attr("display", function(d) { return d.value > .009 ? null : "none"; })
-    .text(function(d, i) { return raceNames[i] /*+ "(" + d.value.toFixed(2) + ")"*/; });
+		arcs.append("svg:text")
+		    .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+		    .attr("dy", ".35em")
+		    .attr("text-anchor", "middle")
+		    .attr("display", function(d) { return d.value > .009 ? null : "none"; })
+		    .text(function(d, i) { return raceNames[i] /*+ "(" + d.value.toFixed(2) + ")"*/; });
 
-raceCircle.append("svg:text")
-  .attr("class", "title")
-  .attr("y", 10 )
-  .attr("x", rCw/2-15)
-  .attr("fill", "black")
-  .text("Race")
-  .style("text-align","center");
+		raceCircle.append("svg:text")
+		  .attr("class", "title")
+		  .attr("y", 10 )
+		  .attr("x", rCw/2-15)
+		  .attr("fill", "black")
+		  .text("Race")
+		  .style("text-align","center");
 
 
 
@@ -881,7 +860,7 @@ raceCircle.append("svg:text")
 
 
 
-		//---------------------------event handing functions---------------------------//
+//---------------------------event handing functions---------------------------//
 
 		//TODO: maintain state so that we can toggle lines for patient and similar patients on/off
 		d3.select("#decrement").on("click", function() {
@@ -915,7 +894,9 @@ raceCircle.append("svg:text")
 			}
 		  });
 
-		//---------------------------refresh functions---------------------------//
+//---------------------------refresh functions---------------------------//
+
+// time series
 
 		function redraw_lines(){
 			//title.text(selection_size);
@@ -963,7 +944,7 @@ raceCircle.append("svg:text")
 
 			dataGP = count_from_indices(minRange,maxRange);
 			
-			//Gender circles
+//Gender circles
 			genderCircle.selectAll(".arc").remove();
 			
 			var arcs = genderCircle.selectAll(".arc").data(donut(dataGP), function(d) {console.log("Data" + d); return String(d);}).enter().append("svg:g")
@@ -981,7 +962,7 @@ raceCircle.append("svg:text")
 				    .attr("display", function(d) { return d.value > .15 ? null : "none"; })
 				    .text(function(d, i) { return d.value.toFixed(2); });
 				
-			//Age bars
+//Age bars
 			console.log("Min range: " + minRange + " max range: "  + maxRange );
 			dataA = makeAgeArrayFromIndices(minRange,maxRange);
 			mortDataA = findMortDataFromIndices(minRange,maxRange);
@@ -1006,7 +987,7 @@ raceCircle.append("svg:text")
 				});
 
 			
-			// Medication Bars
+// Medication Bars
 			var dataM = medication_count_from_indices(minRange,maxRange);
 			
 			medBar.selectAll(".medBar").remove();
@@ -1040,7 +1021,7 @@ raceCircle.append("svg:text")
 			    .attr("text-anchor", "end")
 			    .text(function(d,i) { return medNames[i]; });
 			
-			//Race Circle
+//Race Circle
 			raceCircle.selectAll(".arc").remove();
 			race_data = race_count_from_indices(minRange,maxRange);
 			
@@ -1161,7 +1142,6 @@ raceCircle.append("svg:text")
 		
 ////---------Time Series Functions	
 
-//---------------------------data manipulation functions---------------------------//
 
 
 		function initializeSelection(){
@@ -1270,7 +1250,7 @@ raceCircle.append("svg:text")
 			sd/=a.length;
 			return Math.sqrt(sd);
 		}
-		// Woot :-)
+
 		</script>
 	</body>
 </html>
