@@ -16,7 +16,7 @@ A live demo for the 800 by 600 will be mounted soon.
 Process
 ------------
 
-This project was done by Parama Pal, Diana MacLean, and Jeffrey Heer in collaboration with the David Kale at the Virtual Pediatric Intensive Care Unit Group over 8 weeks during the summer of 2011. It was primarily conducted in Palo Alto, CA, but involved meeting and shadowing for a thorough contextual inquiry process for one week as well as one week of more intensive collaboration and preparation before MUCMD (Meaningful Uses of Complex Medical Data). 
+This project was done by Parama Pal, Diana MacLean, and Jeffrey Heer in collaboration with the David Kale at the Virtual Pediatric Intensive Care Unit Group (VPICU) at the Children's Hospital in Los Angeles (CHLA) over 8 weeks during the summer of 2011. It was primarily conducted in Palo Alto, CA, but involved meeting and shadowing for a thorough contextual inquiry process for one week as well as one week of more intensive collaboration and preparation before MUCMD (Meaningful Uses of Complex Medical Data) at CHLA. 
 
 Resources
 ------------
