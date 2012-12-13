@@ -4,7 +4,7 @@ Project Summary: Retrieval and Presentation of Similar Patients to Support Clini
 Introduction and Goals
 ----------------------
 
-Doctors are confronted with a deluge of information daily, and as our ability to record and store information at a higher resolution grows, they in turn deal are expected to process and utilize more data. CHLA's VPICU group recently proposed a patient similarity ranking algorithm which can traverse their store of 10K+ patient records and return a ranked list of similar patients. This dashboard was constructed as a proposed method of presenting data to doctors that are actively in the process of treating patients such that they are able to
+Doctors are confronted with a deluge of information daily in order to help with patient care and diagnosis. As our ability to record and store information at a higher resolution grows, doctors in turn are expected to cognitively process and utilize this increased amount of data. CHLA's VPICU group recently proposed a patient similarity ranking algorithm which can traverse their store of 10K+ patient records and return a ranked list of similar patients. This dashboard was constructed as a proposed method of presenting data to doctors that are actively in the process of treating patients such that they are able to
 
 - receive data about the current patient in an efficient and visually clear manner that delivers more information to them in real time
 - have a tool that gives them the option to contextualize their current patient in terms of past patients
