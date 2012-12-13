@@ -1,4 +1,4 @@
-Project Summary: "Retrieval and Presentation of Similar Patients to Support Clinicians at the Bedside"
+Project Summary: Retrieval and Presentation of Similar Patients to Support Clinicians at the Bedside
 ===============
 
 Introduction and Goals
@@ -6,8 +6,12 @@ Introduction and Goals
 
 Doctors are confronted with a deluge of information daily, and as our ability to record and store information at a higher resolution grows, they in turn deal are expected to process and utilize more data. CHLA's VPICU group recently proposed a patient similarity ranking algorithm which can traverse their store of 10K+ patient records and return a ranked list of similar patients. This dashboard was constructed as a proposed method of presenting data to doctors that are actively in the process of treating patients such that they are able to
 
-- recieve data about the current patient in an efficient and visually clear manner that delivers more information to them in real time
+- receive data about the current patient in an efficient and visually clear manner that delivers more information to them in real time
 - have a tool that gives them the option to contextualize their current patient in terms of past patients
+
+Demo
+------------
+A live demo for the 800 by 600 will be mounted soon.
 
 Process
 ------------
@@ -16,7 +20,7 @@ This project was done by Parama Pal, Diana MacLean, and Jeffrey Heer in collabor
 
 Resources
 ------------
-The project was done primarily in javascript using D3.js by mbostock
+The project was done primarily in javascript using [D3.js](https://github.com/mbostock/d3/) by Michael Bostock
 
 Updates
 ------------
@@ -25,4 +29,4 @@ Updates
 
 Contributors
 -------------
-David Kale (turambar), Diana McLean (malcdi), Parama Pal (parama), Jeffrey Heer (jheer)
+David Kale ([turambar](https://github.com/turambar/)), Diana McLean ([malcdi](https://github.com/malcdi)), Parama Pal ([parama](https://github.com/parama/)), Jeffrey Heer ([jheer](https://github.com/jheer/))

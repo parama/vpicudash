@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- Title -->
+		<title>EHR Dashboard</title>
+		
+		<!-- Styles -->
+		<link type="text/css" rel="stylesheet" href="styles/chla_dashboard.css"/>
+		
+		<!-- Libraries -->
+	    <script type="text/javascript" src="lib/d3.js"></script>
+		<script type="text/javascript" src="lib/d3.layout.js"></script>
+		
+		<!-- Data Sets -->
+		<script type="text/javascript" src="data/episode_id_map.js"></script>
+		<script type="text/javascript" src="data/physiodata_alternate.js"></script>
+		<script type="text/javascript" src="data/scores_episodeid_4162.js"></script>
+		<script type="text/javascript" src="data/outcomes.js"></script>
+	    <script type="text/javascript" src="data/data.js"></script>
+		<script type="text/javascript" src="data/demographics.js"></script>
+		<script type="text/javascript" src="data/medications.js"></script>	
+
+	</head>
+
+<!--Body starts here!-->
+
+	<body>
+			
+		<!--Div Declarations!-->
+				
+		<!-- Time Series Addition-->
+
+		<div class="mainPanel" id="mainPanel">
+			<button id="aggregateButton">
+		        aggregate
+		      </button>
+		</div>
+		
+		<div class="title" id = "title"></div>
+		
+
+		<!-- END Time Series Addition-->
+
+		
+		<div class="patientSummary" id="patientSummary">
+		</div>
+		
+		<div class="selectionBar" id="selectionBar">
+		</div>
+		
+		<div class="genderCircle" id="genderCircle">
+		</div>
+		
+		<div class="ageBar" id="ageBar">
+		</div>
+		
+		<div class="medBar" id="medBar">
+		</div>
+		
+		<div class="raceCircle" id="raceCircle">
+		</div>
+		
+		<script type="text/javascript">
+		
+//D3 Starts here!
+
+//GLOBAL VARIABLES
+
+	var currentPatient = 0; //can be 0 or 1, for the 2 patients we have
+
+//---------------------------PATIENT SUMMARY BAR------------------------------------
+
+// 0 = female, 1 = male
+		
+		var patientSummaryBar = d3.select("#patientSummary")
+				.append("svg:svg")
+				.append("svg:g");
+			
+			//create blue background rectangle
+			patientSummaryBar.selectAll("rect")
+		    	.data([1]).enter().append("svg:rect")
+			    .attr("width", 800)
+			    .attr("height", 60)
+				.style("fill", "steelblue")
+				.style("stroke", "white");
+			
+			//construct and attach patient summary string
+			patientSummaryBar.append("svg:text")
+				.text(infoBarIntro + pbstrings[currentPatient])
+				.attr("x", 20)
+				.attr("y", 20)
+				.style("font-size", "12")
+				.style("fill", "white");
+
+//---------------------------PATIENT SELECTION BAR------------------------------------		
+
+		// declare data arrays, initialize variables
+		var dataP = makeScoreArray(),
+			dataB = scoreArray(60), //shows the top 100 similar patients
+			mortData = cropArray(60, died);
+			//dataB = binScoreArray(100);
+		
+		var mouseIsDown = false,
+			minRange = Number.MAX_VALUE;
+			maxRange = Number.MIN_VALUE;
+		
+		//set size parameters for the selection bar here	
+		var tBarW = 100,
+		    tBarH = 500,
+		    tx = d3.scale.linear().domain([0, 1]).range([0, tBarW]),
+		    ty = d3.scale.ordinal().domain(d3.range(dataB.length)).rangeBands([0, tBarH], .2);
+			size = 500;
+			padding = 5,
+			barMargin = 15;
+
+		var tSelectionBar = d3.select("#selectionBar")
+			.append("svg:svg")
+			    .attr("width", tBarW + 40) //add padding for axis labels
+			    .attr("height", tBarH + 20)
+			  .append("svg:g")
+			    .attr("transform", "translate(20,0)");
+			
+			//add chart title
+			tSelectionBar.append("svg:text")
+			  .attr("class", "title")
+			  .attr("y", 10 )
+			  .text("Patient Selection Bar"); 
+
+		// select all components that correspond to g.bar and attach svg:g to it
+		var tbars = tSelectionBar.selectAll("g.bar")
+		    .data(dataB)
+		  .enter().append("svg:g");
+		
+		// individual bars in chart
+		tbars.append("svg:rect")
+            
+			//assign appearance qualities of individual bars
+			.attr("x", 0)
+            .attr("y", function(d,i) { return ty(i)+barMargin; })
+		    .attr("width", function(d,i) {return tx(d.score);})
+		    .attr("height", ty.rangeBand())
+		    .style("fill", function(d,i){ 
+				if(mortData[d.index]==0)
+					return "steelblue";
+				else
+				 	return "lightgreen";
+				})
+			.attr("pointer-events", "all")
+			.attr("visibility", function(d, i) {return d.index == 0 ? "hidden" : "visible";})     
+			
+			//assign dynamic properties (changing color via hovering, changing selected patient range)
+			.on("mousedown", mousedown)
+			
+			.on("mouseout", function(d,i) {
+				if(!mouseIsDown)
+					d3.select(this).style("fill", function(d,i){ 
+						//DM: 
+						//if(mortData[dataB.indexOf(d)]==0)
+						if(mortData[d.index]==0)
+							if(d.index <= maxRange && d.index >= minRange)
+								return "firebrick"
+							else
+								return "steelblue";
+						else
+							if(d.index <= maxRange && d.index >= minRange)
+								return "pink";
+							else
+						 		return "lightgreen";
+						});
+			})
+			
+			
+			.on("mouseover", function(d,i) {
+				d3.select(this).style("fill", "blue");
+				if(mouseIsDown){
+					if(maxRange < d.index)
+						maxRange = d.index;
+					if(minRange > d.index)
+						minRange = d.index;
+				}
+			});
+			
+			
+		tbars.append("svg:text")
+		    .attr("x", tx)
+			.attr("y",function(d,i) { return ty(i)+20; })
+			.attr("x", function(d, i) {return d.score * tBarW;})
+		    .attr("dy", ".35em")
+		    .attr("fill", "white")
+		    .attr("text-anchor", "end")
+			.text(function(d) {return d.score.toFixed(2);});
+		
+		d3.select(window)
+			.on("mousemove", mousemove)
+			.on("mouseup", mouseup);
+			
+		var rect, x0, x1, count;
+		
+		function mousedown() {			
+			//DM: update our selection state
+			mouseIsDown = true;
+			minRange = Number.MAX_VALUE;
+			maxRange = Number.MIN_VALUE;
+			
+		    x0 = d3.svg.mouse(this);
+			//DM: Maybe supposed to count how many bars we've highlighted so far?
+		    count = 0;
+		
+			//DM: update selection range
+			minRange = d3.select(this).node().__data__.index;
+			maxRange = d3.select(this).node().__data__.index;
+		    		
+		    rect = d3.select(this.parentNode.parentNode)
+	        	.append("svg:rect")
+	           	.style("fill", "#999")
+	           	.style("fill-opacity", .5);
+	
+	        d3.event.preventDefault();
+	      }
+		
+		var tracker = [];
+		
+		function mousemove() {
+			if (!rect) return;
+			x1 = d3.svg.mouse(rect.node());
+			
+			var minx = Math.min(x0[0], x1[0]),
+				maxx = Math.max(x0[0], x1[0]),
+				miny = Math.min(x0[1], x1[1]),
+				maxy = Math.max(x0[1], x1[1]);
+			
+			rect
+				.attr("x", minx - .5)
+				.attr("y", miny - .5)
+				.attr("width", maxx - minx + 1)
+				.attr("height", maxy - miny + 1);
+				
+			var v = rect.node().__data__;
+			tracker.push(v);
+			
+			count = 0;
+		}
+		
+		function mouseup() {
+			
+			//DM: reset our mousedown state
+			mouseIsDown = false;
+			
+			if (!rect) return;
+			rect.remove();
+			rect = null;
+						
+			//DM: wasn't sure what count was doing
+			//if(!count) 
+			tSelectionBar.selectAll("rect")
+				.style("fill", function(d,i){ 
+					//console.log(d);
+				//DM:
+				//if(mortData[dataB.indexOf(d)]==0)
+				if(mortData[d.index]==0)
+					if(d.index <= maxRange && d.index >= minRange)
+						return "firebrick"
+					else
+						return "steelblue";
+				else
+					if(d.index <= maxRange && d.index >= minRange)
+						return "pink";
+					else
+				 		return "lightgreen";
+				});
+				
+			//DM: update data selection
+			subsetSelection(minRange, maxRange);
+			//DM: redraw our lines appropriately
+			if(aggregated)
+				redraw_envelopes();
+			else
+				redraw_lines();
+			//redraw our subpanels
+			redraw_sub_panels();
+		}
+	
+//---------------------------PATIENT TIME SERIES------------------------------------
+
+		//---------------------------general setup---------------------------//
+		// mini panel size variables
+		//TODO: make each panel an SVG element so that it will reposition
+		var mainPanelW=150,
+			mainPanelH=60,
+			margin = 25,
+			textOffset = 10,
+			numPerRow = 3;
+
+		// default interaction settings
+		var selection_size = 1, //DM: let's start with just the patient highlighted. This default used to be 80,
+			aggregated = false;
+		
+		//scales & line/area generating functions
+		var x=d3.scale.linear().domain([1,24]).range([0,mainPanelW])
+			y=[],
+			line_functions=[],
+			area_functions=[];
+
+		//this should be more succint; using functions to create the lines etc. is a cheap hack to fix the scoping problems of doing it in the for loop.
+		for(var i = 0; i < variables.length; i++){
+			y.push(createY(i));
+			line_functions.push(createLine(i));
+			area_functions.push(createArea(i));
+		}
+
+		function createY(i){
+			return d3.scale.linear().domain([variables[i].maximumValid,variables[i].minimumValid]).range([0,mainPanelH]);
+		}
+
+		function createLine(i){
+			var y_local = createY(i);
+			var line = d3.svg.line()
+				.x(function(d) {return x(d[0]);})
+				.y(function(d) {return y_local(d[1]);});
+			return line;
+		}
+
+		function createArea(index){
+			var y_local = createY(index);
+			var area = d3.svg.area()
+				.x(function(d,i) {return x(i);})
+				.y0(function(d) { return y_local(d.mean - d.sd);})
+				.y1(function(d) { return y_local(d.mean + d.sd);});
+			return area;
+		}
+
+		//---------------------------DATA set up---------------------------//
+		var vars = [dbp,sbp,pcrr,etco,fio,tgcs,gluc,hr,ph,rr,pox,temp,uo]; //move this to the .js file
+		var aggregates = aggregate(vars);
+
+		vars_selected = []; //vars_selected contains the (selection_size) most similar cases to the subject, as well as the subject
+		initializeSelection();
+		var aggregates_selected = aggregate(vars_selected);
+		
+		
+		//---------------------------main vis---------------------------//
+		var vis = d3.select(document.getElementById("mainPanel")).append("svg:svg");
+
+		//Blue, background lines
+		//Note: this is slightly inconsistent; we could do the whole thing in one shot by crossing all of the data, instead of var by var. See red line generation below.
+		//TODO: clean up the messy 	  {return "translate("...    string?
+		vis.append("svg:g")
+			.selectAll("g").data(d3.range(vars.length))
+			.enter().append("svg:g")
+			.attr("transform", function(d,i) {return "translate(" + (i % numPerRow) * (mainPanelW + margin) + "," + (Math.floor(i/numPerRow) * (mainPanelH + margin) + margin) + ")";})
+			.selectAll("path")
+			.data(function(d,i) {return cross(vars[d], d)}).enter()
+			.append("svg:path")
+			.attr("class", "backgroundline")
+			.attr("d", function(d) {return line_functions[d.ind](d.vals);});
+
+		//Red, foreground lines	
+		vis.selectAll(".line")
+			.data(function() {return crossAll(vars_selected);}, String).enter()
+			.append("svg:path")
+			.attr("class", "line")
+			.attr("d", function(d) {return line_functions[d.ind](d.vals);})
+			.attr("transform", function(d,i) {return "translate(" + (d.ind % numPerRow) * (mainPanelW + margin) + "," + (Math.floor(d.ind/numPerRow) * (mainPanelH + margin) + margin) + ")";});
+
+		//Solid line representing the patient 	
+		vis.selectAll(".patientLine")
+			.data(function() {return d3.range(vars.length);}).enter()
+			.append("svg:path")
+			.attr("class", "patientLine")
+			.attr("d", function(d,i) {return line_functions[i](vars_selected[i][0]);})
+			.attr("transform", function(d,i) {return "translate(" + (i % numPerRow) * (mainPanelW + margin) + "," + (Math.floor(i/numPerRow) * (mainPanelH + margin) + margin) + ")";});
+
+		//Surrounding rectangles
+		vis.append("svg:g")
+			.selectAll("g").data(d3.range(vars.length))
+			.enter().append("svg:rect")	
+			.attr("transform", function(d) {return "translate(" + ((d % numPerRow) * (mainPanelW + margin)) + "," + (Math.floor(d/numPerRow) * (mainPanelH + margin) + margin) + ")";})
+			.attr("width", 150)
+			.attr("height", 60);	
+
+		//Chart titles
+		vis.append("svg:g")
+		  .selectAll("text").data(d3.range(vars.length)).enter()
+		  .append("svg:text")
+		  .attr("class", "title")
+		  .attr("dy", ".71em")
+		  .attr("transform", function(d) {return "translate(" + ((d % numPerRow) * (mainPanelW + margin)) + "," + (Math.floor(d/numPerRow) * (mainPanelH + margin) + textOffset +5) + ")";})
+		//DM: include units
+		  //.text(function(d) { return variables[d].name;});
+		  .text(function(d) { return variables[d].name + "(" + variables[d].units + ")";});
+
+		//X-Scales
+		vis.append("svg:g")
+			.selectAll("g").data(d3.range(vars.length)).enter()
+			.append("svg:g")
+			.attr("transform", function(d,i) {return "translate(" + (i % numPerRow) * (mainPanelW + margin) + "," + (Math.floor(i/numPerRow) * (mainPanelH + margin) + margin) + ")";})
+		  .selectAll("xLabels").data(x.ticks(10)).enter()
+			.append("svg:text")
+			.attr("x", function(d,i) {return x(d) - 5})
+			.attr("y", mainPanelH + 10)
+			.attr("class", "label")
+			.text(function(d,i) {return d;});
+
+		//Y-scales
+		vis.append("svg:g")
+			.selectAll("g").data(d3.range(vars.length)).enter()
+			.append("svg:g")
+			.attr("transform", function(d,i) {return "translate(" + (i % numPerRow) * (mainPanelW + margin) + "," + (Math.floor(i/numPerRow) * (mainPanelH + margin) + margin) + ")";})
+			.selectAll("yLables").data(function(d,i) {return y[i].ticks(5).map(function(d) {return {val : d, map : y[i](d)};});}).enter()
+			.append("svg:text")
+			.attr("x", mainPanelW + 1)
+			.attr("text-align", "right")
+			.attr("y", function(d, i) {return d.map + 7;})
+			.attr("class", "label")
+			.text(function(d,i) {return Math.round(d.val)})
+			.attr("visibility", function(d,i) {return i == 0 ? "hidden" : "visible"});
+
+//---------------------------Gender Circles---------------------------//
+
+
+		var genderCircle = d3.select("#genderCircle")
+		  .append("svg:svg")
+		    //.data([dataGP])
+		    .attr("width", gCw)
+		    .attr("height", gCh+15);
+
+
+		var gCr = Math.min(gCw, gCh) / 2,
+			dataGP = count_from_indices(minRange,maxRange)
+			color = function(i) {
+				if(i==0) 
+					return "steelblue" 
+				else 
+					return "lightpink"
+				},
+		    donut = d3.layout.pie().sort(d3.descending),
+		    arc = d3.svg.arc().innerRadius(gCr * .4).outerRadius(gCr);
+
+		//title of circle plot
+		genderCircle.append("svg:text")
+		  .attr("class", "title")
+		  .attr("y", 10 )
+		  .attr("x", gCw/2-15)
+		  .attr("fill", "black")
+		  .text("Gender")
+		  .style("text-align","center");
+  
+		var arcs = genderCircle.selectAll("g.arc")
+		    .data(donut(dataGP), function(d) {return String(d);})
+		  .enter().append("svg:g")
+		    .attr("class", "arc")
+		    .attr("transform", "translate(" + gCr + "," + (gCr + 15) + ")");
+
+		arcs.append("svg:path")
+			.attr("class", "gender")
+			.attr("d", arc)
+		    .style("fill", function(d, i) { return color(i); });
+
+		arcs.append("svg:text")
+		    .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+		    .attr("dy", ".35em")
+		    .attr("text-anchor", "middle")
+		    .attr("display", function(d) { return d.value > .15 ? null : "none"; })
+		    .text(function(d, i) { return d.value.toFixed(2); });
+
+		//takes in array with episode ids for patients, returns array with values of percent males and females in population
+		function count_from_episode_ids(array)
+		{
+			var count = 0;
+			var ratioArray = [];
+	
+			for(var i = 0; i < array.length; i++)
+			{
+				//look up and store index of episode id
+				var indy = eid_map["eid" + array[i]];
+				if(sex[indy]=="m")
+				{
+					count=count+1;
+				}	
+			}
+			var ratio = count/array.length;
+			ratioArray.push(ratio);
+			ratioArray.push(1-ratio);
+			return ratioArray;
+		}
+
+		function count_from_indices(start,end)
+		{
+			var count = 0;
+			var ratioArray = [];
+	
+			for(var i = 0; i < (end-start+1); i++)
+			{
+				if(sex[start+i]=="m")
+				{
+					count=count+1;
+					//console.log("value was " + sex[start+i]);
+				}
+			}
+			var ratio = count/(end-start+1);
+			ratioArray.push(ratio);
+			ratioArray.push(1-ratio);
+			return ratioArray;
+		}
+
+//---------------------------Age Bars---------------------------//
+
+		//get data arrays
+		var dataA = makeAgeArrayFromIndices(0,9);
+		var mortDataA = findMortDataFromIndices(0,9);
+
+		var aBarW = 120, //width of plot
+		    aBarH = 100, //height of plot
+		    agex = d3.scale.ordinal().domain(d3.range(dataA.length)).rangeBands([0, aBarW]),
+		    agey = d3.scale.linear().domain([0, Math.max.apply( Math, dataA )]).range([0, aBarH])
+		 	padding = 20;
+	
+			//append svg object to ageBar div
+		var ageBar = d3.select("#ageBar")
+			.append("svg:svg")
+			    .attr("width", aBarW + 3*padding) //add padding for axis labels
+			    .attr("height", aBarH + 2*padding)
+			  .append("svg:g")
+			    .attr("transform", "translate(20,20)");
+	
+			//add title to chart
+			ageBar.append("svg:text")
+			  .attr("class", "title")
+			  .attr("y", 0)
+			  .attr("x", (aBarW)/2)
+			  .text("Age (Months)");
+
+	
+			//individual bars
+		var aBars = ageBar.selectAll("g.bar")
+		    .data(dataA)
+		  	.enter().append("svg:g").attr("class", "bar");
+
+			aBars.append("svg:rect")
+			    .attr("x", function(d,i) { return agex(i)+15; })
+			    .attr("y", function(d,i) { return aBarH-agey(dataA[i]);})
+			    .attr("width", agex.rangeBand())
+			    .attr("height", agey)
+				.style("fill", function(d,i){ 
+				if(mortDataA[i]==0)
+					return "steelblue";
+				else
+				 	return "lightgreen";
+				});
+
+
+			//background scale lines
+		var	aLines = ageBar.selectAll("g.line")
+					.data(agey.ticks(3))
+				.enter().append("svg:g").attr("class", "line");
+		
+			
+		var ticksArray = agey.ticks(3).reverse();
+		console.log(ticksArray);
+
+		var aRules = ageBar.selectAll(".rule")
+					.data(ticksArray)
+				.enter().append("svg:text")
+					.attr("class","rule")
+					.attr("x",aBarW+padding+5)
+					.attr("y",function(d,i){return agey(ticksArray[i])+padding;})
+					.attr("dy",5)
+					.attr("text-anchor","middle")
+					.attr("fill","#bbb")
+					.text(function(d,i){ return (String)(ticksArray[3-i]);});
+			
+			aLines.append("svg:line")
+					.attr("x1",padding-5)
+					.attr("x2",padding+aBarW-5)
+					.attr("y1",function(d,i){return agey(ticksArray[i])+padding;})
+					.attr("y2",function(d,i){return agey(ticksArray[i])+padding;})
+					.style("stroke","#bbb");
+		
+		///////FUNCTIONS
+
+		function makeAgeArrayFromEids(array)
+		{
+			var selected = [];
+			for(var i = 0; i < array.length; i++){
+				var indy = eid_map["eid" + array[i]];
+				selected.push(ageInMonths[indy]);
+			}
+			return selected;
+		}
+
+		function makeAgeArrayFromIndices(start,end)
+		{
+			var selected = [];
+			console.log('in function');
+			for(var i = 0+start; i < end +1; i++){
+				var indy = i+start;
+				console.log("pushing " + ageInMonths[indy] + " at index " + indy);
+				selected.push(ageInMonths[indy]);
+			}
+			return selected;
+		}
+
+		//find and return selected patient mortality
+		function findMortDataFromIndices(start,end)
+		{
+			var selected = [];
+			for(var i = 0+start; i < (end-start+1); i++){
+				var var_to_push = died[i];
+				selected.push(var_to_push);
+			}
+			return selected;
+		}
+		
+
+		function findMortDataFromEids(array)
+		{
+			var selected = [];
+			for(var i = 0; i < array.length; i++){
+				var indy = eid_map["eid" + array[i]];
+				var var_to_push = died[indy];
+				selected.push(var_to_push);
+				}
+			return selected;
+		}
+
+//---------------------------Medication Bar---------------------------//
+
+		// put defaults in me here
+		var dataM = medication_count_from_indices(0,12);
+		
+		var mBarW = 120,
+		    mBarH = 120,
+		    mx = d3.scale.linear().domain([0, 1]).range([0, mBarW]),
+		    medy = d3.scale.ordinal().domain(d3.range(dataM.length)).rangeBands([0, mBarH], .2);
+			
+		var medBar = d3.select("#medBar")
+			.append("svg:svg")
+			    .attr("width", mBarW + 40) //add padding for axis labels
+			    .attr("height", mBarH + 20)
+			  .append("svg:g")
+			    .attr("transform", "translate(20,0)");
+			medBar.append("svg:text")
+			  .attr("class", "title")
+			  .attr("y", 10 )
+			  .text("Medication Bar");
+
+		var mbars = medBar.selectAll("g.bar")
+		    .data(dataM)
+		  .enter().append("svg:g").attr("class", "medBar");
+
+		mbars.append("svg:rect")
+            .attr("x", 0)
+            .attr("y", function(d,i) { return medy(i)+7; })
+		    .attr("width", mx)
+		    .attr("height", medy.rangeBand())
+			.style("fill","mediumslateblue");
+
+		mbars.append("svg:text")
+		    .attr("x", mx)
+			.attr("class", "drugLabelText")
+			.attr("y",function(d,i) { return medy(i)+15; })
+		    //.attr("dx", -6)
+		    .attr("dy", ".35em")
+		    .attr("fill", "white")
+		    .attr("text-anchor", "end")
+			.text(function(d) {return (d*100).toFixed(0) + "%";})
+			.attr("visibility", function(d) {return d>0.1 ? "visible" : "hidden";});
+		    //.text(mx.tickFormat(100));
+		
+		mbars.append("svg:text")
+			.attr("transform","translate(65,0)")
+		    .attr("x", mx)
+		    //.attr("y", medy.rangeBand() / 2)
+			.attr("y",function(d,i) { return medy(i)+15; })
+		    .attr("dx", -6)
+		    .attr("dy", ".35em")
+		    .attr("fill", "black")
+		    .attr("text-anchor", "end")
+		    .text(function(d,i) { return medNames[i]; });
+
+
+/////// Medication Bar Functions 
+		
+		function medication_count_from_episode_ids(array)
+		{
+			var count = 0;
+			var medArray = [0,0,0,0,0,0];
+			var newArray = [];
+			for(var i = 0; i < array.length; i++)
+			{
+				newArray = [];
+				var indy = eid_map["eid" + array[i]];
+				
+				medArray[0] = medArray[0]+cefotaxime[indy];
+				medArray[1] = medArray[1]+dopamine[indy];
+				medArray[2] = medArray[2]+epinephrine[indy];
+				medArray[3] = medArray[3]+milrinone[indy];
+				medArray[4] = medArray[4]+pipTazo[indy];
+				medArray[5] = medArray[5]+vancomycin[indy];
+
+				for(var j=0; j <6; j++)
+					newArray.push(medArray[j]);
+			}
+			
+			for(var i=0; i<6; i++)
+				newArray[i] = newArray[i]/array.length;
+
+			return newArray;
+		}
+
+		function medication_count_from_indices(start,end)
+		{
+			var count = 0;
+			var medArray = [0,0,0,0,0,0];
+			var newArray = [];
+			for(var i = 0; i < (end-start+1); i++)
+			{
+				newArray = [];
+				var indy = i+start;
+				
+				medArray[0] = medArray[0]+cefotaxime[indy];
+				medArray[1] = medArray[1]+dopamine[indy];
+				medArray[2] = medArray[2]+epinephrine[indy];
+				medArray[3] = medArray[3]+milrinone[indy];
+				medArray[4] = medArray[4]+pipTazo[indy];
+				medArray[5] = medArray[5]+vancomycin[indy];
+
+				console.log(medArray);
+
+				for(var j=0; j <6; j++)
+					newArray.push(medArray[j]);
+			}
+			
+			for(var i=0; i<6; i++)
+				newArray[i] = newArray[i]/(end-start+1);
+
+			return newArray;
+		}
+
+
+//---------------------------Race Circle---------------------------//
+
+
+		var rCw = 50,
+		    rCh = 50,
+		    rCRad = Math.min(rCw, rCh) / 2,
+		    race_data = race_count_from_indices(5,15),
+		    race_color = d3.scale.category20(),
+		    race_donut = d3.layout.pie().sort(d3.descending),
+		    race_arc = d3.svg.arc().innerRadius(rCRad * .4).outerRadius(rCRad);
+
+		var raceCircle = d3.select("#raceCircle")
+		  .append("svg:svg")
+		    //.data([race_data])
+		    .attr("width", rCw)
+		    .attr("height", rCh+30);
+
+		var arcs = raceCircle.selectAll("g.arc")
+		    .data(race_donut(race_data))
+		  .enter().append("svg:g")
+		    .attr("class", "arc")
+		    .attr("transform", "translate(" + rCRad + "," + (rCRad+15) + ")");
+
+		arcs.append("svg:path")
+			.attr("class", "race")
+			.attr("d", race_arc)
+		    .style("fill", function(d, i) { return race_color(i); });
+
+		arcs.append("svg:text")
+		    .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+		    .attr("dy", ".35em")
+		    .attr("text-anchor", "middle")
+		    .attr("display", function(d) { return d.value > .009 ? null : "none"; })
+		    .text(function(d, i) { return raceNames[i] /*+ "(" + d.value.toFixed(2) + ")"*/; });
+
+		raceCircle.append("svg:text")
+		  .attr("class", "title")
+		  .attr("y", 10 )
+		  .attr("x", rCw/2-15)
+		  .attr("fill", "black")
+		  .text("Race")
+		  .style("text-align","center");
+
+
+
+
+
+
+
+//---------------------------event handing functions---------------------------//
+
+		//TODO: maintain state so that we can toggle lines for patient and similar patients on/off
+		d3.select("#decrement").on("click", function() {
+			decrementSelection(10);
+			if(aggregated)
+				redraw_envelopes();
+			else
+				redraw_lines();
+		  });
+
+		d3.select("#increment").on("click", function() {
+			incrementSelection(10);
+			if(aggregated)
+				redraw_envelopes();
+			else
+				redraw_lines();
+		  });
+
+		d3.select("#aggregateButton").on("click", function() {
+			if(aggregated){
+				d3.selectAll(".envelope").remove();
+				d3.selectAll(".envelope_selected").remove()
+				d3.selectAll(".backgroundline").attr("visibility", "visible");//.style("opacity/bin/bash: opacity: command not found", 0.3);
+				redraw_lines();
+				aggregated = false;
+			} else {				
+				d3.selectAll(".line").remove();
+				d3.selectAll(".backgroundline").attr("visibility", "hidden");//.style("opacity", 0); //DMac: is this dumb? Should I just remove + redraw?
+				redraw_envelopes();
+				aggregated = true;
+			}
+		  });
+
+//---------------------------refresh functions---------------------------//
+
+// time series
+
+		function redraw_lines(){
+			//title.text(selection_size);
+			//take care of the red selection lines with the updated data selection
+			var lines = vis.selectAll(".line")
+				.data(function() {return crossAll(vars_selected)}, String); //key the data!!! Otherwise it's majorly screwey
+			lines.enter()
+				.append("svg:path")
+				.attr("class", "line")
+				.attr("d", function(d) {return line_functions[d.ind](d.vals);})
+				.attr("transform", function(d,i) {return "translate(" + (d.ind % numPerRow) * (mainPanelW + margin) + "," + (Math.floor(d.ind/numPerRow) * (mainPanelH + margin) + margin) + ")";})
+			lines.exit().remove();
+	
+			//redraw and overlay the patient line on each panel
+			//TODO: enable this in aggregate mode, too
+			d3.selectAll(".patientLine").remove();
+			vis.selectAll(".patientLine")
+				.data(function() {return d3.range(vars.length);}).enter()
+				.append("svg:path")
+				.attr("class", "patientLine")
+				.attr("d", function(d,i) {return line_functions[i](vars_selected[i][0]);})
+				.attr("transform", function(d,i) {return "translate(" + (i % numPerRow) * (mainPanelW + margin) + "," + (Math.floor(i/numPerRow) * (mainPanelH + margin) + margin) + ")";});
+		}
+
+		//TODO: add mean lines for each envelope
+		function redraw_envelopes(){
+			title.text(selection_size);
+			d3.selectAll(".envelope_selected").remove();
+			d3.selectAll(".envelope").remove();
+
+			var visEnvelopes = vis.append("svg:g")
+				.selectAll("g")
+				.data(d3.range(aggregates.length)).enter()
+				.append("svg:g")
+				.attr("transform", function(d,i) {return "translate(" + ((i % numPerRow) * (mainPanelW + margin) + margin/2) + "," + (Math.floor(i/numPerRow) * (mainPanelH + margin) + margin) + ")";});
+			visEnvelopes.append("svg:path")
+				.attr("class", "envelope")
+				.attr("d", function(d,i) {return area_functions[i](aggregates[i]);});
+			visEnvelopes.append("svg:path")
+				.attr("class", "envelope_selected")
+				.attr("d", function(d,i) {return area_functions[i](aggregates_selected[i]);});				
+		}
+		
+		function redraw_sub_panels(){
+
+			dataGP = count_from_indices(minRange,maxRange);
+			
+//Gender circles
+			genderCircle.selectAll(".arc").remove();
+			
+			var arcs = genderCircle.selectAll(".arc").data(donut(dataGP), function(d) {console.log("Data" + d); return String(d);}).enter().append("svg:g")
+			    .attr("class", "arc")
+			    .attr("transform", "translate(" + gCr + "," + (gCr + 15) + ")")
+				.append("svg:path")
+				.attr("class", "gender")
+				.attr("d", arc)
+			    .style("fill", function(d, i) { console.log("trying to fill: " + i); return color(i); });
+			
+			arcs.append("svg:text")
+				    .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+				    .attr("dy", ".35em")
+				    .attr("text-anchor", "middle")
+				    .attr("display", function(d) { return d.value > .15 ? null : "none"; })
+				    .text(function(d, i) { return d.value.toFixed(2); });
+				
+//Age bars
+			console.log("Min range: " + minRange + " max range: "  + maxRange );
+			dataA = makeAgeArrayFromIndices(minRange,maxRange);
+			mortDataA = findMortDataFromIndices(minRange,maxRange);
+			agex = d3.scale.ordinal().domain(d3.range(dataA.length)).rangeBands([0, aBarW]),
+		    agey = d3.scale.linear().domain([0, Math.max.apply( Math, dataA )]).range([0, aBarH]);
+			
+			ageBar.selectAll(".bar").remove();
+			
+			var aBars = ageBar.selectAll(".bar")
+			    .data(dataA).enter().append("svg:g").attr("class", "bar");
+
+			aBars.append("svg:rect")
+			    .attr("x", function(d,i) { return agex(i)+15; })
+			    .attr("y", function(d,i) { return aBarH-agey(dataA[i]);})
+			    .attr("width", agex.rangeBand())
+			    .attr("height", agey)
+				.style("fill", function(d,i){ 
+					if(mortDataA[i]==0)
+						return "steelblue";
+					else
+					 	return "lightgreen";
+				});
+
+			
+// Medication Bars
+			var dataM = medication_count_from_indices(minRange,maxRange);
+			
+			medBar.selectAll(".medBar").remove();
+			var mbars = medBar.selectAll(".medBar")
+				.data(dataM).enter().append("svg:g").attr("class", "medBar");
+
+			mbars.append("svg:rect")
+	            .attr("x", 0)
+	            .attr("y", function(d,i) { return medy(i)+15; })
+			    .attr("width", mx)
+			    .attr("height", medy.rangeBand())
+				.style("fill","mediumslateblue");
+
+			mbars.append("svg:text")
+			    .attr("x", mx)
+				.attr("class", "drugLabelText")
+				.attr("y",function(d,i) { return medy(i)+30; })
+			    .attr("dy", ".35em")
+			    .attr("fill", "white")
+			    .attr("text-anchor", "end")
+				.text(function(d) {return (d*100).toFixed(0) + "%";})
+				.attr("visibility", function(d) {return d>0.1 ? "visible" : "hidden";});
+
+			mbars.append("svg:text")
+				.attr("transform","translate(65,0)")
+			    .attr("x", mx)
+				.attr("y",function(d,i) { return medy(i)+30; })
+			    .attr("dx", -6)
+			    .attr("dy", ".35em")
+			    .attr("fill", "black")
+			    .attr("text-anchor", "end")
+			    .text(function(d,i) { return medNames[i]; });
+			
+//Race Circle
+			raceCircle.selectAll(".arc").remove();
+			race_data = race_count_from_indices(minRange,maxRange);
+			
+			var race_arcs = raceCircle.selectAll(".arc")
+				.data(race_donut(race_data), function(d) {return String(d);})
+				.enter().append("svg:g")
+			    .attr("class", "arc")
+			    .attr("transform", "translate(" + rCRad + "," + (rCRad + 15) + ")")
+				.append("svg:path")
+				.attr("class", "race")
+				.attr("d", race_arc)
+			    .style("fill", function(d, i) { console.log("trying to fill: " + i); return race_color(i); });
+			
+			var race_arcs = raceCircle.selectAll(".arc")
+					.append("svg:text")
+				    .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+				    .attr("dy", ".35em")
+				    .attr("text-anchor", "middle")
+				    .attr("display", function(d) { return d.value > .009 ? null : "none"; })
+				    .text(function(d, i) { return raceNames[i]; });	
+		}
+
+/////////~~~~~~~~~~~~~~~~~~~UTILITY FUNCTIONS BEGIN HERE~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+////---------Selection Bar Functions
+
+		function cross(a) {
+		  return function(d) {
+		    var c = [];
+		    for (var i = 0, n = a.length; i < n; i++) c.push({x: d, y: a[i]});
+		    return c;
+		  };
+		}
+		
+		function highlight(index) {
+			if (index < 0) {
+				// removing highlights
+			} else {
+				// highlight patient record for selected index
+				// be sure to dehighight any prevous selections...
+			}
+		}
+		
+		function makeScoreArray()
+		{
+			var selected = [];
+			for(var i = 0; i < similarityScores.length; i++){
+				var episode_id_to_push = eid_map["eid" + similarityScores[i].episodeid];
+				if(episode_id_to_push > similarityScores.length){
+					console.log("invalid episode id: " + episode_id_to_push);
+				} else {
+				//console.log("pushing " + similarityScores[i].score);
+				selected.push(similarityScores[i].score);
+				}
+			}
+			console.log("returning");
+			return selected;
+		}
+		
+		function scoreArray(limit)
+		{
+			var selected = [];
+			var crossIndex = 0;
+			//DM: offset by 1 because the very first patient in the score array is the patient herself
+			for(var i = 0; i < limit + 1; i++){
+				//DM: This is not mapping episode ID's correctly...
+				//var episode_id_to_push = similarityScores[i].episodeid;
+				var episode_id_to_push = eid_map["eid" + similarityScores[i].episodeid];
+				
+				if(episode_id_to_push > similarityScores.length){
+				//	console.log("invalid episode id: " + episode_id_to_push);
+				} else {
+				//DM: changed this to push an index with the score so that it's easier to recover the selection range 
+				//selected.push(similarityScores[i].score);
+					selected.push({index : crossIndex, score : similarityScores[i].score});
+					crossIndex += 1;
+				}	
+			}
+			return selected;
+		}
+		
+		function cropArray(limit, arrayOfInterest)
+		{
+			var selected = [];
+			for(var i = 0; i < limit; i++){
+				var var_to_push = arrayOfInterest[i];
+				//if(var_to_push > similarityScores.length){
+				//	console.log("invalid episode id: " + episode_id_to_push);
+				//} else {
+				//console.log("pushing " + similarityScores[i].score);
+				selected.push(var_to_push);
+				//}
+			}
+			
+			console.log("ran scoreArray");
+			return selected;
+		}
+
+		function binScoreArray(variable)
+		{
+			var binned = [];
+			var	desired = variable; //desired length of the array to consolidate values into
+			increment = Math.ceil(dataP.length/desired)
+			current = 0;
+			for(var i = 0; i < desired-1; i++){
+				for(var j = 0; j < increment; j++)
+				{
+					var index = i*increment+j;
+					current = current+dataP[index]; //add up the values in the bin
+				}
+				current = current/increment; //average the values
+				binned.push(current);
+				console.log("ran binScoreArray");
+				current = 0;	
+			}
+			return binned;
+		}
+		
+////---------Time Series Functions	
+
+
+
+		function initializeSelection(){
+			for(i in d3.range(vars.length))
+				vars_selected.push([]); //vars_selected is global
+			for(var i = 0; i < vars_selected.length; i++)
+				for(var j = 0; j < selection_size; j++){
+					//eid_map maps episode id's to array indices. This lets us get the correct episodes for comparison
+					var episode_id_to_push = eid_map["eid" + similarityScores[j].episodeid];
+					if(episode_id_to_push > similarityScores.length)
+						console.log("invalid episode id: " + episode_id_to_push);
+					else
+						vars_selected[i].push(vars[i][eid_map["eid" + similarityScores[j].episodeid]]);
+				}
+		}
+		
+		function subsetSelection(start, end){
+			vars_selected = [];
+			selection_size = end-start+1;
+			console.log("start: " + start + " end: " + end + " selection size: " + selection_size)
+			for(i in d3.range(vars.length))
+				vars_selected.push([]); //vars_selected is global
+			for(var i = 0; i < vars_selected.length; i++){
+				//DM: this is an annoying artefact of the code structure: the first elements in vars_selected must correspond to the selected patient
+				for(var j = 0; j < selection_size; j++){
+					vars_selected[i].push(vars[i][eid_map["eid" + similarityScores[0].episodeid]]);
+				}
+				for(var j = 0; j < selection_size; j++){
+					//eid_map maps episode id's to array indices. This lets us get the correct episodes for comparison
+					var episode_id_to_push = eid_map["eid" + similarityScores[j+start].episodeid];
+					if(episode_id_to_push > similarityScores.length)
+						console.log("invalid episode id: " + episode_id_to_push);
+					else
+						vars_selected[i].push(vars[i][eid_map["eid" + similarityScores[j+start].episodeid]]);
+				}
+			}
+			aggregates_selected = aggregate(vars_selected); //re-compute our aggregate statistics
+		}
+
+		function incrementSelection(delta){
+			for(var i = 0; i < vars_selected.length; i++){
+				for(var j = selection_size; j < selection_size + delta; j++){
+					var episode_id_to_push = eid_map["eid" + similarityScores[j].episodeid];
+					if(episode_id_to_push > similarityScores.length)
+						console.log("invalid episode id: " + episode_id_to_push); //this shouldn't be happening if we're using the eid_map lookup object
+					else
+						vars_selected[i].push(vars[i][eid_map["eid" + similarityScores[j].episodeid]]);
+				}
+			}
+			selection_size += delta;
+			aggregates_selected = aggregate(vars_selected); //re-compute our aggregate statistics
+		}
+
+		function decrementSelection(delta){
+			for(var i = 0; i < vars_selected.length; i++)
+				for(var j = selection_size; j > selection_size - delta; j--)
+					vars_selected[i].pop();
+			selection_size -= delta;
+			aggregates_selected = aggregate(vars_selected);
+		}
+
+		//cross each line with the given index
+		function cross(a, index) {
+			var c = [];
+			for(var i = 0; i < a.length; i++) c.push({ind: index, vals: a[i]});
+			return c;
+		}
+
+		//cross each line with each index
+		function crossAll(a) {
+			var c=[];
+			for(var i =0; i < a.length; i++)
+				for(var j = 0; j < a[0].length; j++)
+					c.push({ind: i, vals: a[i][j]})
+			return c;
+		}
+
+		//kinda nasty way of aggregateing all bucketed variables over all hours
+		function aggregate(a){
+			var aggregates = [];
+			for(var i = 0; i < a.length; i++){ //loop through each variable (sbp, dbp, pcrr etc...)
+				var nested = [];
+				for(var hour in d3.range(24))
+					nested.push([]);
+		
+				for(var j=0; j < a[i].length; j++) //loop through each patient (i.e. each array) 
+					for(var k =0; k < a[i][j].length; k++) //loop through each measurement in the line
+						nested[a[i][j][k][0] - 1].push(a[i][j][k][1]);
+
+				var valsArr = [];
+				nested[hour].sort(function compareNumbers(a, b) { return a - b;});
+				for(var hour in d3.range(24))
+					valsArr.push({ind : i, mean : d3.sum(nested[hour])/nested[hour].length, topQ: d3.quantile(nested[hour], 0.65), bottomQ:d3.quantile(nested[hour], 0.35), sd : sdev(nested[hour])})
+				aggregates.push(valsArr);
+				}
+			return aggregates;
+		}
+
+		//standard deviation. Unfortunately not all of these variables are Gaussian. 
+		function sdev(a){
+			var mean = d3.sum(a)/a.length;
+			var sd = 0;
+			for(var i = 0; i < a.length; i++){
+				sd += Math.pow(a[i] - mean,2)
+			}
+			sd/=a.length;
+			return Math.sqrt(sd);
+		}
+		
+	/////// Race Circle Functions
+
+		function race_count_from_episode_ids(array)
+		{
+			var raceArray = [0,0,0,0,0,0,0,0,0];
+			var newArray = [];
+			for(var i = 0; i < array.length; i++)
+			{
+				newArray = [];
+				var indy = eid_map["eid" + array[i]];
+
+				raceArray[raceCode[indy]]=raceArray[raceCode[indy]]+1;
+
+				for(var j=0; j <7; j++)
+				{
+
+					newArray.push(raceArray[j]);
+				}
+
+			}
+
+			for(var i=0; i<7; i++)
+			{
+				newArray[i] = newArray[i]/array.length;
+			}
+
+			return newArray;
+		}
+
+		function race_count_from_indices(start,end)
+		{
+			var raceArray = [0,0,0,0,0,0,0,0,0];
+			var newArray = [];
+			for(var i = 0; i < (end-start+1); i++)
+			{
+				newArray = [];
+				var indy = i+start;
+
+
+				raceArray[raceCode[indy]]=raceArray[raceCode[indy]]+1;
+
+				for(var j=0; j <7; j++)
+				{
+
+					newArray.push(raceArray[j]);
+				}
+
+			}
+
+			for(var i=0; i<7; i++)
+			{
+				newArray[i] = newArray[i]/(end-start+1);
+			}
+
+			return newArray;
+		}
+
+		</script>
+	</body>
+</html>
